@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::web::error::{ErrorResponse, ErrorType};
 
 use axum::{

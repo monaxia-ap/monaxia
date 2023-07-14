@@ -14,6 +14,7 @@ use axum::Server;
 use clap::Parser;
 
 #[derive(Debug, Clone, Parser)]
+#[command(author, version, about)]
 pub struct Arguments {
     /// Specify config file path.
     #[clap(flatten)]
