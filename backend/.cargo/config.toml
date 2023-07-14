@@ -1,0 +1,2 @@
+[alias]
+mx = "run --package monaxia -- mx"

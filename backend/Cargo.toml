@@ -1,11 +1,16 @@
 [workspace]
 resolver = "2"
-members = ["batan", "monaxia", "xtask"]
+members = ["batan", "monaxia"]
 
 [workspace.dependencies]
 anyhow = "1.0.71"
-clap = { version = "4.3.11", features = ["derive"] }
 serde = { version = "1.0.171", features = ["derive"] }
+time = { version = "0.3.23", features = [
+    "macros",
+    "formatting",
+    "parsing",
+    "serde",
+] }
 tokio = { version = "1.29.1", features = ["full"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
