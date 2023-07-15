@@ -16,3 +16,4 @@ axum = "0.6.18"
 axum-extra = "0.7.4"
 clap = { version = "4.3.11", features = ["derive"] }
 sea-query = { version = "0.29.1", features = ["with-time", "with-uuid", "with-json"] }
+toml = "0.7.6"

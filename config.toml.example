@@ -1,0 +1,5 @@
+[server]
+domain = "localhost"
+
+[user]
+registration = "closed"

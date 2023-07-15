@@ -5,7 +5,7 @@ use self::{
     mx::{execute_mx_subcommand, MxSubcommand},
     user::{execute_user_subcommand, UserSubcommand},
 };
-use crate::web;
+use crate::web::{construct_router, state::construct_state};
 
 use std::{net::SocketAddr, path::PathBuf};
 
@@ -29,8 +29,8 @@ pub struct Arguments {
 #[derive(Debug, Clone, Parser)]
 pub struct CommonOptions {
     /// Specify config file path.
-    #[clap(short, long)]
-    pub config: Option<PathBuf>,
+    #[clap(short, long, default_value = "./config.toml")]
+    pub config: PathBuf,
 }
 
 #[derive(Debug, Clone, Parser)]
@@ -53,8 +53,8 @@ pub enum Subcommand {
 pub async fn execute_cli(args: Arguments) -> Result<()> {
     match args.subcommand {
         Subcommand::Serve { bind } => {
-            let state = web::state::AppState {};
-            let routes = web::construct_router(state);
+            let state = construct_state(&args.options.config).await?;
+            let routes = construct_router(state);
             Server::bind(&bind)
                 .serve(routes.into_make_service())
                 .await?;
