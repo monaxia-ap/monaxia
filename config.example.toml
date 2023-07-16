@@ -1,5 +1,8 @@
 [server]
+bind = "0.0.0.0:3000"
+schema = "http"
 domain = "localhost"
+port = 3000
 
 [user]
 registration = "closed"

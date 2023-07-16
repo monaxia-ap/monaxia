@@ -1,3 +1,4 @@
+use anyhow::Error as AnyhowError;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -35,4 +36,12 @@ pub fn bail_other<T>(status_code: StatusCode, reason: impl Into<String>) -> MxRe
         error: ErrorType::OtherError,
         reason: reason.into(),
     })
+}
+
+pub fn map_err_anyhow(err: AnyhowError) -> ErrorResponse {
+    ErrorResponse {
+        status_code: StatusCode::INTERNAL_SERVER_ERROR,
+        error: ErrorType::OtherError,
+        reason: err.to_string(),
+    }
 }

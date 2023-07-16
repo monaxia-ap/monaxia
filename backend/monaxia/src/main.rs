@@ -1,5 +1,6 @@
 mod cli;
 mod config;
+mod constant;
 mod web;
 
 use anyhow::Result;
