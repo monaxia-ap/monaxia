@@ -4,5 +4,8 @@ schema = "http"
 domain = "localhost"
 port = 3000
 
+[database]
+url = "postgres://localhost:5432/monaxia"
+
 [user]
 registration = "closed"

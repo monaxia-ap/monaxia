@@ -5,7 +5,11 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+once_cell = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
+sea-query = { workspace = true }
+sqlx = { workspace = true }
 time = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
@@ -15,5 +19,4 @@ url = { workspace = true }
 axum = "0.6.18"
 axum-extra = "0.7.4"
 clap = { version = "4.3.11", features = ["derive"] }
-sea-query = { version = "0.28.5", features = ["with-time", "with-uuid", "with-json"] } # 0.29 is broken @ 2023-07-15
 toml = "0.7.6"

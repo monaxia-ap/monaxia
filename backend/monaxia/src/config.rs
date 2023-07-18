@@ -7,6 +7,7 @@ use url::Url;
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
     pub server: ConfigServer,
+    pub database: ConfigDatabase,
     pub user: ConfigUser,
 }
 
@@ -16,6 +17,11 @@ pub struct ConfigServer {
     pub schema: String,
     pub domain: String,
     pub port: Option<u16>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfigDatabase {
+    pub url: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
