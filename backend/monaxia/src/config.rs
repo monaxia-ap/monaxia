@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, path::Path};
 
-use anyhow::{Context, Result};
+use anyhow::{ensure, Context, Result};
 use serde::Deserialize;
 use url::Url;
 
@@ -31,16 +31,17 @@ pub enum UserRegistration {
     Invitation,
 }
 
-pub async fn read_config(filename: &Path) -> Result<Config> {
-    let config_text = tokio::fs::read_to_string(filename).await?;
-    let config = toml::from_str(&config_text)?;
-    Ok(config)
-}
-
 impl ConfigServer {
     pub fn server_base_url(&self) -> Result<Url> {
         let mut url = Url::parse(&format!("{}://{}", self.schema, self.domain))?;
         url.set_port(self.port).ok().context("invalid base URL")?;
         Ok(url)
     }
+}
+
+pub async fn read_config(filename: &Path) -> Result<Config> {
+    ensure!(filename.exists(), "config file not found");
+    let config_text = tokio::fs::read_to_string(filename).await?;
+    let config = toml::from_str(&config_text)?;
+    Ok(config)
 }

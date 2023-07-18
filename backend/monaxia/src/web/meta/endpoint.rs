@@ -5,7 +5,7 @@ use super::schema::{
 };
 use crate::{
     config::UserRegistration,
-    constant::{SOFTWARE_NAME, VERSION_TAG},
+    constant::{SOFTWARE_NAME, VERSION},
     web::{
         error::{bail_other, map_err_anyhow, MxResult},
         extract::RjQuery,
@@ -75,7 +75,7 @@ pub async fn nodeinfo(State(state): State<AppState>) -> MxResult<Json<Nodeinfo>>
         version: "2.1".into(),
         software: NodeinfoSoftware {
             name: SOFTWARE_NAME.into(),
-            version: VERSION_TAG.into(),
+            version: VERSION.into(),
         },
         protocols: vec!["activitypub".into()],
         services: NodeinfoServices {
