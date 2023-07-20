@@ -9,9 +9,11 @@ once_cell = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sea-query = { workspace = true }
+sea-query-binder = { workspace = true }
 sqlx = { workspace = true }
 time = { workspace = true }
 tokio = { workspace = true }
+tokio-stream = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 url = { workspace = true }
