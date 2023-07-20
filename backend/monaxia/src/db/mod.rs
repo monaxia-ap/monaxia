@@ -3,9 +3,12 @@ pub mod migration {
     pub mod schema;
 }
 
-use sqlx::{PgPool as Pool, Result as SqlxResult};
+use std::time::Duration;
+
+use sqlx::{pool::PoolOptions, PgPool as Pool, Result as SqlxResult};
 
 pub async fn establish_pool(database_url: &str) -> SqlxResult<Pool> {
-    let pool = Pool::connect(database_url).await?;
+    let options = PoolOptions::new().acquire_timeout(Duration::from_secs(5));
+    let pool = options.connect(database_url).await?;
     Ok(pool)
 }
