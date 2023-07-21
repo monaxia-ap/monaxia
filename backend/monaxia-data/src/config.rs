@@ -28,6 +28,8 @@ pub struct ConfigDatabase {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ConfigUser {
     pub registration: UserRegistration,
+    pub username_max_length: usize,
+    pub banned_usernames: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -66,6 +68,8 @@ pub fn make_default_config() -> Config {
         },
         user: ConfigUser {
             registration: UserRegistration::Closed,
+            username_max_length: 32,
+            banned_usernames: vec![],
         },
     }
 }

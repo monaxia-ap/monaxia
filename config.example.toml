@@ -9,3 +9,5 @@ url = "postgres://localhost:5432/monaxia"
 
 [user]
 registration = "closed"
+username_max_length = 32
+banned_usernames = []

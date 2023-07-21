@@ -1,4 +1,3 @@
-use super::CommonOptions;
 use crate::{repository::Container, web::state::AppState};
 
 use std::{
@@ -24,9 +23,6 @@ static MIGRATION_TIMESTAMP_FORMAT: Lazy<&[FormatItem]> =
 pub struct MigrateSubcommand {
     #[clap(subcommand)]
     command: Option<MxCommand>,
-
-    #[clap(flatten)]
-    options: CommonOptions,
 }
 
 #[derive(Debug, Clone, Parser)]
