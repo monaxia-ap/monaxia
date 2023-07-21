@@ -2,6 +2,7 @@ use std::{net::SocketAddr, path::Path};
 
 use anyhow::{ensure, Context, Result};
 use serde::Deserialize;
+use tokio::fs::read_to_string;
 use url::Url;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -47,12 +48,11 @@ impl ConfigServer {
 
 pub async fn read_config(filename: &Path) -> Result<Config> {
     ensure!(filename.exists(), "config file not found");
-    let config_text = tokio::fs::read_to_string(filename).await?;
+    let config_text = read_to_string(filename).await?;
     let config = toml::from_str(&config_text)?;
     Ok(config)
 }
 
-#[allow(dead_code)]
 pub fn make_default_config() -> Config {
     Config {
         database: ConfigDatabase {

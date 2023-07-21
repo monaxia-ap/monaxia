@@ -4,7 +4,6 @@ use super::schema::{
     WellknownWebfinger,
 };
 use crate::{
-    config::UserRegistration,
     constant::{SOFTWARE_NAME, VERSION},
     web::{
         error::{bail_other, map_err_anyhow, map_err_repository, MxResult},
@@ -21,6 +20,7 @@ use axum::{
     Json,
 };
 use axum_extra::extract::WithRejection;
+use monaxia_data::config::UserRegistration;
 
 pub async fn host_meta(State(state): State<AppState>) -> MxResult<Response<String>> {
     let server_base_url = state

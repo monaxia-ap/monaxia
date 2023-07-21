@@ -1,5 +1,4 @@
 mod cli;
-mod config;
 mod constant;
 mod repository;
 mod web;

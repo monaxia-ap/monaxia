@@ -1,11 +1,9 @@
-use crate::{
-    config::{read_config, Config},
-    repository::{construct_container_db, Container},
-};
+use crate::repository::{construct_container_db, Container};
 
 use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
+use monaxia_data::config::{read_config, Config};
 use monaxia_db::establish_pool;
 
 #[derive(Clone)]
@@ -28,7 +26,8 @@ pub async fn construct_state(config_filename: &Path) -> Result<AppState> {
 
 #[cfg(test)]
 pub fn construct_state_test() -> AppState {
-    use crate::{config::make_default_config, repository::construct_container_test};
+    use crate::repository::construct_container_test;
+    use monaxia_data::config::make_default_config;
 
     let config = make_default_config();
     let container = construct_container_test();
