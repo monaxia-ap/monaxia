@@ -1,3 +1,8 @@
+CREATE TABLE "domains" (
+    "domain" TEXT NOT NULL PRIMARY KEY,
+    "recognized_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE "users" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "id_seq" SERIAL NOT NULL UNIQUE,
@@ -10,8 +15,7 @@ CREATE TABLE "users" (
     "display_name" TEXT NULL,
     "description" TEXT NULL
 );
--- first column is domain, which is useful for ranged index search with domain.
-CREATE UNIQUE INDEX "users_unique_acct" ON "users" ("domain", "username");
+CREATE UNIQUE INDEX "users_unique_acct" ON "users" ("username", "domain");
 
 CREATE TABLE "local_users" (
     "user_id" TEXT NOT NULL PRIMARY KEY REFERENCES "users" ("id"),

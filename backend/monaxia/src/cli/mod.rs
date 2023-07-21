@@ -46,7 +46,6 @@ pub enum Subcommand {
     User(UserSubcommand),
 
     /// developer options.
-    #[clap(subcommand)]
     Mx(MxSubcommand),
 }
 
@@ -60,7 +59,7 @@ pub async fn execute_cli(args: Arguments) -> Result<()> {
                 .await?;
         }
         Subcommand::User(s) => execute_user_subcommand(args.options, s).await?,
-        Subcommand::Mx(s) => execute_mx_subcommand(args.options, s).await?,
+        Subcommand::Mx(s) => execute_mx_subcommand(s).await?,
     }
     Ok(())
 }

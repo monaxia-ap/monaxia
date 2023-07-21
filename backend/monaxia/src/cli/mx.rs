@@ -1,22 +1,43 @@
 use super::CommonOptions;
 use crate::{
     config::read_config,
-    db::{establish_pool, migration::action::ensure_migrations_table},
+    db::{
+        establish_pool,
+        migration::action::{ensure_migrations_table, fetch_last_migration, register_migration},
+    },
 };
 
-use std::{env::var as env_var, path::Path, process::Command};
+use std::{
+    env::var as env_var,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 use once_cell::sync::Lazy;
-use time::{format_description::FormatItem, macros::format_description, OffsetDateTime};
-use tokio::fs::{create_dir_all, write};
+use sqlx::Executor;
+use time::{
+    format_description::FormatItem, macros::format_description, OffsetDateTime, PrimitiveDateTime,
+};
+use tokio::fs::{create_dir_all, read_dir, read_to_string, write};
+use tokio_stream::{wrappers::ReadDirStream, StreamExt};
+use tracing::{error, info, warn};
 
 static MIGRATION_TIMESTAMP_FORMAT: Lazy<&[FormatItem]> =
     Lazy::new(|| format_description!("[year][month][day][hour][minute][second]"));
 
 #[derive(Debug, Clone, Parser)]
-pub enum MxSubcommand {
+pub struct MxSubcommand {
+    #[clap(subcommand)]
+    command: MxCommand,
+
+    #[clap(flatten)]
+    options: CommonOptions,
+}
+
+#[derive(Debug, Clone, Parser)]
+pub enum MxCommand {
     /// Execute DB migration.
     Migrate,
 
@@ -25,12 +46,12 @@ pub enum MxSubcommand {
     MigrateNew { name: String },
 }
 
-pub async fn execute_mx_subcommand(options: CommonOptions, subcommand: MxSubcommand) -> Result<()> {
-    match subcommand {
-        MxSubcommand::Migrate => {
-            execute_migration(options).await?;
+pub async fn execute_mx_subcommand(subcommand: MxSubcommand) -> Result<()> {
+    match subcommand.command {
+        MxCommand::Migrate => {
+            execute_migration(subcommand.options).await?;
         }
-        MxSubcommand::MigrateNew { name } => {
+        MxCommand::MigrateNew { name } => {
             create_new_migration(&name).await?;
         }
     }
@@ -38,18 +59,7 @@ pub async fn execute_mx_subcommand(options: CommonOptions, subcommand: MxSubcomm
 }
 
 pub async fn create_new_migration(name: &str) -> Result<()> {
-    let cargo = env_var("CARGO").context("cannot locate cargo")?;
-    let workspace_file = String::from_utf8(
-        Command::new(cargo)
-            .args(["locate-project", "--workspace", "--message-format=plain"])
-            .output()?
-            .stdout,
-    )?;
-    let migrations_dir = Path::new(workspace_file.trim())
-        .parent()
-        .context("invalid workspace root")?
-        .join("migrations");
-
+    let migrations_dir = get_migrations_dir()?;
     let now = OffsetDateTime::now_local().expect("cannot fetch local time");
     let dt_str = now
         .format(&MIGRATION_TIMESTAMP_FORMAT)
@@ -64,10 +74,110 @@ pub async fn create_new_migration(name: &str) -> Result<()> {
 }
 
 pub async fn execute_migration(options: CommonOptions) -> Result<()> {
+    info!("executing migration...");
     let config = read_config(&options.config).await?;
-    let pool = establish_pool(&config.database.url).await?;
+    let now = OffsetDateTime::now_local()?;
+    let local_offset = now.offset();
 
+    let pool = establish_pool(&config.database.url).await?;
     ensure_migrations_table(&pool).await?;
 
+    // local offset change is potentially unsafe manipulation
+    let last_migration = fetch_last_migration(&pool).await?;
+    let local_oldest = OffsetDateTime::UNIX_EPOCH.to_offset(local_offset);
+    let last_migrated = last_migration
+        .as_ref()
+        .map(|m| m.last_migration.to_offset(local_offset))
+        .unwrap_or(local_oldest);
+    let last_executed = last_migration
+        .as_ref()
+        .map(|m| m.executed_at.to_offset(local_offset))
+        .unwrap_or(local_oldest);
+
+    if last_executed >= now {
+        error!("current time is {now}, but last migration executed at {last_executed}");
+        bail!("invalid migration");
+    }
+
+    let migration_files = get_migrations_file(last_migrated).await?;
+    info!("executing {} migration(s)", migration_files.len());
+
+    let mut last = None;
+    let mut tx = pool.begin().await?;
+    for (target_datetime, target_path) in migration_files {
+        info!("==> {target_path:?}",);
+        let sql = read_to_string(target_path).await?;
+        tx.execute(&*sql).await?;
+        last = Some(target_datetime);
+    }
+
+    if let Some(new_migrated) = last {
+        register_migration(&pool, new_migrated, now).await?;
+    }
+
+    tx.commit().await?;
+
     Ok(())
+}
+
+fn get_migrations_dir() -> Result<PathBuf> {
+    let cargo = env_var("CARGO").context("cannot locate cargo")?;
+    let workspace_file = String::from_utf8(
+        Command::new(cargo)
+            .args(["locate-project", "--workspace", "--message-format=plain"])
+            .output()?
+            .stdout,
+    )?;
+    let migrations_dir = Path::new(workspace_file.trim())
+        .parent()
+        .context("invalid workspace root")?
+        .join("migrations");
+
+    Ok(migrations_dir)
+}
+
+async fn get_migrations_file(
+    filter_after: OffsetDateTime,
+) -> Result<Vec<(OffsetDateTime, PathBuf)>> {
+    let migrations_dir = get_migrations_dir()?;
+    let mut migration_stream = ReadDirStream::new(read_dir(&migrations_dir).await?);
+
+    let mut paths = vec![];
+    while let Some(de) = migration_stream.next().await {
+        let de = de?;
+        let ft = de.file_type().await?;
+        if !ft.is_file() {
+            continue;
+        }
+
+        let path = de.path();
+        let ext = path.extension().and_then(|t| t.to_str());
+        if ext != Some("sql") {
+            continue;
+        }
+
+        let Some(filename) = path.file_name() else {
+            warn!("failed to extract filename from {path:?}, skipping");
+            continue;
+        };
+        let Some(filename_dt) = filename.to_str().filter(|s| s.len() >= 20).map(|s| &s[..14]) else {
+            warn!("migration file {path:?} has incorrect filename format, skipping");
+            continue;
+        };
+        let datetime = match PrimitiveDateTime::parse(filename_dt, &MIGRATION_TIMESTAMP_FORMAT) {
+            Ok(dt) => dt.assume_offset(filter_after.offset()),
+            Err(err) => {
+                warn!("migration file timestamp has incorrect format, skipping ({err})");
+                continue;
+            }
+        };
+        if datetime <= filter_after {
+            continue;
+        }
+
+        paths.push((datetime, path));
+    }
+    paths.sort_by_key(|(dt, _)| *dt);
+
+    Ok(paths)
 }

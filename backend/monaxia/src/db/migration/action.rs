@@ -1,7 +1,11 @@
-use super::schema::MigrationDef;
+use super::schema::{Migration, MigrationDef};
 
-use sea_query::{ColumnDef, Index, IndexOrder, PostgresQueryBuilder as QueryBuilder, Table};
+use sea_query::{
+    ColumnDef, Index, IndexOrder, Order, PostgresQueryBuilder as QueryBuilder, Query, Table,
+};
+use sea_query_binder::SqlxBinder;
 use sqlx::{PgPool as Pool, Result as SqlxResult};
+use time::OffsetDateTime;
 
 pub async fn ensure_migrations_table(pool: &Pool) -> SqlxResult<()> {
     let query = Table::create()
@@ -9,7 +13,7 @@ pub async fn ensure_migrations_table(pool: &Pool) -> SqlxResult<()> {
         .table(MigrationDef::Table)
         .col(
             ColumnDef::new(MigrationDef::Id)
-                .integer()
+                .big_integer()
                 .not_null()
                 .primary_key()
                 .auto_increment(),
@@ -24,13 +28,49 @@ pub async fn ensure_migrations_table(pool: &Pool) -> SqlxResult<()> {
                 .timestamp_with_time_zone()
                 .not_null(),
         )
-        .index(
-            Index::create()
-                .name("migrations_execution")
-                .col((MigrationDef::ExecutedAt, IndexOrder::Desc)),
-        )
-        .to_string(QueryBuilder);
+        .build(QueryBuilder);
     sqlx::query(&query).execute(pool).await?;
+
+    let index_query = Index::create()
+        .if_not_exists()
+        .name("migrations_execution")
+        .table(MigrationDef::Table)
+        .col((MigrationDef::ExecutedAt, IndexOrder::Desc))
+        .build(QueryBuilder);
+    sqlx::query(&index_query).execute(pool).await?;
+
+    Ok(())
+}
+
+pub async fn fetch_last_migration(pool: &Pool) -> SqlxResult<Option<Migration>> {
+    let (query, values) = Query::select()
+        .columns([
+            MigrationDef::Id,
+            MigrationDef::LastMigration,
+            MigrationDef::ExecutedAt,
+        ])
+        .from(MigrationDef::Table)
+        .order_by(MigrationDef::ExecutedAt, Order::Desc)
+        .limit(1)
+        .build_sqlx(QueryBuilder);
+    let row = sqlx::query_as_with(&query, values)
+        .fetch_optional(pool)
+        .await?;
+    Ok(row)
+}
+
+pub async fn register_migration(
+    pool: &Pool,
+    latest_migration_datetime: OffsetDateTime,
+    execution_datetime: OffsetDateTime,
+) -> SqlxResult<()> {
+    let (query, values) = Query::insert()
+        .into_table(MigrationDef::Table)
+        .columns([MigrationDef::LastMigration, MigrationDef::ExecutedAt])
+        .values([latest_migration_datetime.into(), execution_datetime.into()])
+        .expect("failed to encode")
+        .build_sqlx(QueryBuilder);
+    sqlx::query_with(&query, values).execute(pool).await?;
 
     Ok(())
 }
