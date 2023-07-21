@@ -1,11 +1,5 @@
 use super::CommonOptions;
-use crate::{
-    config::read_config,
-    db::{
-        establish_pool,
-        migration::action::{ensure_migrations_table, fetch_last_migration, register_migration},
-    },
-};
+use crate::config::read_config;
 
 use std::{
     env::var as env_var,
@@ -16,7 +10,6 @@ use std::{
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use once_cell::sync::Lazy;
-use sqlx::Executor;
 use time::{
     format_description::FormatItem, macros::format_description, OffsetDateTime, PrimitiveDateTime,
 };

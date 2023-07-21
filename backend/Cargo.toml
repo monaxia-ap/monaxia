@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["batan", "monaxia"]
+members = ["batan", "monaxia", "monaxia-db"]
 
 [workspace.dependencies]
 anyhow = "1.0.71"
@@ -40,3 +40,5 @@ tokio-stream = { version = "0.1.14", features = ["full"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 url = { version = "2.4.0", features = ["serde"] }
+
+monaxia-db = { path = "./monaxia-db" }

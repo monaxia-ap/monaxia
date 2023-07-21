@@ -2,7 +2,6 @@ mod cli;
 mod config;
 mod constant;
 mod data;
-mod db;
 mod repository;
 mod web;
 

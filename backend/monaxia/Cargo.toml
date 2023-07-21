@@ -8,8 +8,6 @@ anyhow = { workspace = true }
 once_cell = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sea-query = { workspace = true }
-sea-query-binder = { workspace = true }
 sqlx = { workspace = true }
 time = { workspace = true }
 tokio = { workspace = true }
@@ -24,3 +22,5 @@ axum-extra = "0.7.4"
 clap = { version = "4.3.11", features = ["derive"] }
 thiserror = "1.0.44"
 toml = "0.7.6"
+
+monaxia-db = { workspace = true }

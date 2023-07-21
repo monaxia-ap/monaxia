@@ -1,12 +1,12 @@
 use crate::{
     config::{read_config, Config},
-    db::establish_pool,
     repository::{construct_container_db, Container},
 };
 
 use std::{path::Path, sync::Arc};
 
 use anyhow::Result;
+use monaxia_db::establish_pool;
 
 #[derive(Clone)]
 pub struct AppState {

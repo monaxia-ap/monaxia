@@ -1295,9 +1295,8 @@ dependencies = [
  "axum",
  "axum-extra",
  "clap",
+ "monaxia-db",
  "once_cell",
- "sea-query",
- "sea-query-binder",
  "serde",
  "serde_json",
  "sqlx",
@@ -1309,6 +1308,16 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "url",
+]
+
+[[package]]
+name = "monaxia-db"
+version = "0.1.0"
+dependencies = [
+ "sea-query",
+ "sea-query-binder",
+ "sqlx",
+ "time",
 ]
 
 [[package]]
