@@ -5,6 +5,7 @@ mod meta {
 
 mod error;
 mod extract;
+mod jsonld;
 pub mod state;
 
 use axum::{routing::get, Router};
