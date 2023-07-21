@@ -7,7 +7,7 @@ use crate::{
     config::UserRegistration,
     constant::{SOFTWARE_NAME, VERSION},
     web::{
-        error::{bail_other, map_err_anyhow, MxResult},
+        error::{bail_other, map_err_anyhow, map_err_repository, MxResult},
         extract::RjQuery,
         state::AppState,
     },
@@ -69,8 +69,14 @@ pub async fn wellknown_nodeinfo(
 }
 
 pub async fn nodeinfo(State(state): State<AppState>) -> MxResult<Json<Nodeinfo>> {
-    let local_users = 0;
+    let local_users = state
+        .container
+        .user
+        .local_users_count()
+        .await
+        .map_err(map_err_repository)?;
     let open_registrations = state.config.user.registration == UserRegistration::Open;
+
     Ok(Json(Nodeinfo {
         version: "2.1".into(),
         software: NodeinfoSoftware {

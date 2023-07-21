@@ -2,6 +2,10 @@ pub mod migration {
     pub mod action;
     pub mod schema;
 }
+pub mod user {
+    pub mod action;
+    pub mod schema;
+}
 
 use std::time::Duration;
 
