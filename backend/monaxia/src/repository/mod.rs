@@ -1,4 +1,10 @@
-pub mod impl_db;
+pub mod error;
+mod impl_db;
+
+use async_trait::async_trait;
+
+pub use self::error::{Error as RepoError, Result as RepoResult};
+pub use self::impl_db::construct_container as construct_container_db;
 
 use std::sync::Arc;
 
@@ -9,6 +15,7 @@ pub struct Container {
 
 pub trait Repository: Send + Sync + 'static {}
 
+#[async_trait]
 pub trait UserRepository: Repository {
-    fn local_users_count(&self) -> usize;
+    async fn local_users_count(&self) -> RepoResult<usize>;
 }
