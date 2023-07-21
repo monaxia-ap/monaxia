@@ -2,6 +2,7 @@ mod cli;
 mod config;
 mod constant;
 mod db;
+mod repository;
 mod web;
 
 use crate::constant::{SOFTWARE_NAME, VERSION_TAG};
