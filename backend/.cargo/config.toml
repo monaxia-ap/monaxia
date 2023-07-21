@@ -1,2 +1,2 @@
 [alias]
-mx = "run --package monaxia -- mx"
+mx = "run --package monaxia --"

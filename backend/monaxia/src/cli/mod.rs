@@ -1,8 +1,8 @@
-mod mx;
+mod migrate;
 mod user;
 
 use self::{
-    mx::{execute_mx_subcommand, MxSubcommand},
+    migrate::{execute_migrate_subcommand, MigrateSubcommand},
     user::{execute_user_subcommand, UserSubcommand},
 };
 use crate::web::{construct_router, state::construct_state};
@@ -13,6 +13,7 @@ use anyhow::Result;
 use axum::Server;
 use clap::Parser;
 
+/// ActivityPub compatible microblogging platform.
 #[derive(Debug, Clone, Parser)]
 #[command(author, version, about)]
 pub struct Arguments {
@@ -45,8 +46,8 @@ pub enum Subcommand {
     #[clap(subcommand)]
     User(UserSubcommand),
 
-    /// developer options.
-    Mx(MxSubcommand),
+    /// Database migration.
+    Migrate(MigrateSubcommand),
 }
 
 pub async fn execute_cli(args: Arguments) -> Result<()> {
@@ -59,8 +60,8 @@ pub async fn execute_cli(args: Arguments) -> Result<()> {
                 .serve(routes.into_make_service())
                 .await?;
         }
-        Subcommand::User(s) => execute_user_subcommand(args.options, s).await?,
-        Subcommand::Mx(s) => execute_mx_subcommand(state.container, s).await?,
+        Subcommand::User(s) => execute_user_subcommand(state, s).await?,
+        Subcommand::Migrate(s) => execute_migrate_subcommand(state, s).await?,
     }
     Ok(())
 }

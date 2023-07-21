@@ -1,4 +1,4 @@
-use super::CommonOptions;
+use crate::web::state::AppState;
 
 use std::path::PathBuf;
 
@@ -10,16 +10,18 @@ use tokio::fs::read_to_string;
 pub enum UserSubcommand {
     /// Create new user.
     Create {
+        /// Username. Used as preferredUsername and display name.
         username: String,
+
+        /// RSA private key file.
         private_key: PathBuf,
+
+        /// RSA public key file.
         public_key: PathBuf,
     },
 }
 
-pub async fn execute_user_subcommand(
-    _options: CommonOptions,
-    subcommand: UserSubcommand,
-) -> Result<()> {
+pub async fn execute_user_subcommand(state: AppState, subcommand: UserSubcommand) -> Result<()> {
     match subcommand {
         UserSubcommand::Create {
             username,

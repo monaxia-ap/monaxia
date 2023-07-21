@@ -1,5 +1,5 @@
 use super::CommonOptions;
-use crate::repository::Container;
+use crate::{repository::Container, web::state::AppState};
 
 use std::{
     env::var as env_var,
@@ -21,9 +21,9 @@ static MIGRATION_TIMESTAMP_FORMAT: Lazy<&[FormatItem]> =
     Lazy::new(|| format_description!("[year][month][day][hour][minute][second]"));
 
 #[derive(Debug, Clone, Parser)]
-pub struct MxSubcommand {
+pub struct MigrateSubcommand {
     #[clap(subcommand)]
-    command: MxCommand,
+    command: Option<MxCommand>,
 
     #[clap(flatten)]
     options: CommonOptions,
@@ -31,27 +31,29 @@ pub struct MxSubcommand {
 
 #[derive(Debug, Clone, Parser)]
 pub enum MxCommand {
-    /// Execute DB migration.
-    Migrate,
-
     /// Create new migration file.
     #[clap(name = "migrate:new")]
     MigrateNew { name: String },
 }
 
-pub async fn execute_mx_subcommand(container: Container, subcommand: MxSubcommand) -> Result<()> {
+pub async fn execute_migrate_subcommand(
+    state: AppState,
+    subcommand: MigrateSubcommand,
+) -> Result<()> {
+    let container = state.container;
+
     match subcommand.command {
-        MxCommand::Migrate => {
+        None => {
             execute_migration(container).await?;
         }
-        MxCommand::MigrateNew { name } => {
+        Some(MxCommand::MigrateNew { name }) => {
             create_new_migration(&name).await?;
         }
     }
     Ok(())
 }
 
-pub async fn create_new_migration(name: &str) -> Result<()> {
+async fn create_new_migration(name: &str) -> Result<()> {
     let migrations_dir = get_migrations_dir()?;
     let now = OffsetDateTime::now_local().expect("cannot fetch local time");
     let dt_str = now
@@ -66,7 +68,7 @@ pub async fn create_new_migration(name: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn execute_migration(container: Container) -> Result<()> {
+async fn execute_migration(container: Container) -> Result<()> {
     info!("executing migration...");
 
     let now = OffsetDateTime::now_local()?;
