@@ -19,3 +19,13 @@ async fn main() -> Result<()> {
     cli::execute_cli(args).await?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::web::state::construct_state_test;
+
+    #[test]
+    fn tests_work() {
+        construct_state_test();
+    }
+}

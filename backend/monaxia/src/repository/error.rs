@@ -5,6 +5,7 @@ use thiserror::Error as ThisError;
 
 pub type Result<T> = StdResult<T, Error>;
 
+#[allow(dead_code)]
 #[derive(Debug, ThisError)]
 pub enum Error {
     #[error("unsupported feature: {0}")]

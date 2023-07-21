@@ -25,3 +25,16 @@ pub async fn construct_state(config_filename: &Path) -> Result<AppState> {
         container,
     })
 }
+
+#[cfg(test)]
+pub fn construct_state_test() -> AppState {
+    use crate::{config::make_default_config, repository::construct_container_test};
+
+    let config = make_default_config();
+    let container = construct_container_test();
+
+    AppState {
+        config: Arc::new(config),
+        container,
+    }
+}

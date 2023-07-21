@@ -19,3 +19,10 @@ pub trait Repository: Send + Sync + 'static {}
 pub trait UserRepository: Repository {
     async fn local_users_count(&self) -> RepoResult<usize>;
 }
+
+// for tests
+
+#[cfg(test)]
+mod impl_test;
+#[cfg(test)]
+pub use self::impl_test::construct_container as construct_container_test;

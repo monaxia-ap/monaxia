@@ -51,3 +51,21 @@ pub async fn read_config(filename: &Path) -> Result<Config> {
     let config = toml::from_str(&config_text)?;
     Ok(config)
 }
+
+#[allow(dead_code)]
+pub fn make_default_config() -> Config {
+    Config {
+        database: ConfigDatabase {
+            url: "postgres://localhost:5432/monaxia".into(),
+        },
+        server: ConfigServer {
+            bind: SocketAddr::V4("0.0.0.0:3000".parse().expect("invalid socket addr")),
+            schema: "http".into(),
+            domain: "localhost".into(),
+            port: None,
+        },
+        user: ConfigUser {
+            registration: UserRegistration::Closed,
+        },
+    }
+}
