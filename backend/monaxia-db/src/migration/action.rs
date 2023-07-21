@@ -63,14 +63,15 @@ pub async fn register_migration(
     pool: &Pool,
     latest_migration_datetime: OffsetDateTime,
     execution_datetime: OffsetDateTime,
-) -> SqlxResult<()> {
+) -> SqlxResult<Migration> {
     let (query, values) = Query::insert()
         .into_table(MigrationDef::Table)
         .columns([MigrationDef::LastMigration, MigrationDef::ExecutedAt])
         .values([latest_migration_datetime.into(), execution_datetime.into()])
         .expect("failed to encode")
+        .returning_all()
         .build_sqlx(QueryBuilder);
-    sqlx::query_with(&query, values).execute(pool).await?;
+    let row = sqlx::query_as_with(&query, values).fetch_one(pool).await?;
 
-    Ok(())
+    Ok(row)
 }

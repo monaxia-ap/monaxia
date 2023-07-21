@@ -50,16 +50,17 @@ pub enum Subcommand {
 }
 
 pub async fn execute_cli(args: Arguments) -> Result<()> {
+    let state = construct_state(&args.options.config).await?;
+
     match args.subcommand {
         Subcommand::Serve { bind } => {
-            let state = construct_state(&args.options.config).await?;
             let routes = construct_router(state);
             Server::bind(&bind)
                 .serve(routes.into_make_service())
                 .await?;
         }
         Subcommand::User(s) => execute_user_subcommand(args.options, s).await?,
-        Subcommand::Mx(s) => execute_mx_subcommand(s).await?,
+        Subcommand::Mx(s) => execute_mx_subcommand(state.container, s).await?,
     }
     Ok(())
 }

@@ -23,4 +23,5 @@ clap = { version = "4.3.11", features = ["derive"] }
 thiserror = "1.0.44"
 toml = "0.7.6"
 
+monaxia-data = { workspace = true }
 monaxia-db = { workspace = true }

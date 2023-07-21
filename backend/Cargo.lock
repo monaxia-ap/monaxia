@@ -1295,6 +1295,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "clap",
+ "monaxia-data",
  "monaxia-db",
  "once_cell",
  "serde",
@@ -1308,6 +1309,13 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "url",
+]
+
+[[package]]
+name = "monaxia-data"
+version = "0.1.0"
+dependencies = [
+ "monaxia-db",
 ]
 
 [[package]]

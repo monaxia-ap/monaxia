@@ -1,5 +1,5 @@
 use super::CommonOptions;
-use crate::config::read_config;
+use crate::repository::Container;
 
 use std::{
     env::var as env_var,
@@ -13,7 +13,7 @@ use once_cell::sync::Lazy;
 use time::{
     format_description::FormatItem, macros::format_description, OffsetDateTime, PrimitiveDateTime,
 };
-use tokio::fs::{create_dir_all, read_dir, read_to_string, write};
+use tokio::fs::{create_dir_all, read_dir, write};
 use tokio_stream::{wrappers::ReadDirStream, StreamExt};
 use tracing::{error, info, warn};
 
@@ -39,10 +39,10 @@ pub enum MxCommand {
     MigrateNew { name: String },
 }
 
-pub async fn execute_mx_subcommand(subcommand: MxSubcommand) -> Result<()> {
+pub async fn execute_mx_subcommand(container: Container, subcommand: MxSubcommand) -> Result<()> {
     match subcommand.command {
         MxCommand::Migrate => {
-            execute_migration(subcommand.options).await?;
+            execute_migration(container).await?;
         }
         MxCommand::MigrateNew { name } => {
             create_new_migration(&name).await?;
@@ -66,17 +66,16 @@ pub async fn create_new_migration(name: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn execute_migration(options: CommonOptions) -> Result<()> {
+pub async fn execute_migration(container: Container) -> Result<()> {
     info!("executing migration...");
-    let config = read_config(&options.config).await?;
+
     let now = OffsetDateTime::now_local()?;
     let local_offset = now.offset();
 
-    let pool = establish_pool(&config.database.url).await?;
-    ensure_migrations_table(&pool).await?;
+    container.migration.ensure_table().await?;
 
     // local offset change is potentially unsafe manipulation
-    let last_migration = fetch_last_migration(&pool).await?;
+    let last_migration = container.migration.fetch_last_migration().await?;
     let local_oldest = OffsetDateTime::UNIX_EPOCH.to_offset(local_offset);
     let last_migrated = last_migration
         .as_ref()
@@ -95,20 +94,13 @@ pub async fn execute_migration(options: CommonOptions) -> Result<()> {
     let migration_files = get_migrations_file(last_migrated).await?;
     info!("executing {} migration(s)", migration_files.len());
 
-    let mut last = None;
-    let mut tx = pool.begin().await?;
-    for (target_datetime, target_path) in migration_files {
-        info!("==> {target_path:?}",);
-        let sql = read_to_string(target_path).await?;
-        tx.execute(&*sql).await?;
-        last = Some(target_datetime);
-    }
-
+    let last = container.migration.run_migrations(&migration_files).await?;
     if let Some(new_migrated) = last {
-        register_migration(&pool, new_migrated, now).await?;
+        container
+            .migration
+            .register_migration(new_migrated, now)
+            .await?;
     }
-
-    tx.commit().await?;
 
     Ok(())
 }
