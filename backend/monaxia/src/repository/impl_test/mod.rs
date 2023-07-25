@@ -1,3 +1,4 @@
+mod domain;
 mod migration;
 mod user;
 
@@ -9,5 +10,6 @@ pub fn construct_container() -> Container {
     Container {
         migration: Arc::new(migration::MigrationRepositoryImpl),
         user: Arc::new(user::UserRepositoryImpl),
+        domain: Arc::new(domain::DomainpositoryImpl),
     }
 }

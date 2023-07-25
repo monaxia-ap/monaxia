@@ -1,3 +1,7 @@
+pub mod domain {
+    pub mod action;
+    pub mod schema;
+}
 pub mod migration {
     pub mod action;
     pub mod schema;

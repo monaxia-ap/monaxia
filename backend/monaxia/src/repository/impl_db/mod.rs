@@ -1,3 +1,4 @@
+mod domain;
 mod migration;
 mod user;
 
@@ -10,6 +11,7 @@ use sqlx::PgPool as Pool;
 pub fn construct_container(pool: Pool) -> Container {
     Container {
         migration: Arc::new(migration::MigrationRepositoryImpl(pool.clone())),
-        user: Arc::new(user::UserRepositoryImpl(pool)),
+        user: Arc::new(user::UserRepositoryImpl(pool.clone())),
+        domain: Arc::new(domain::DomainpositoryImpl(pool)),
     }
 }

@@ -2,6 +2,7 @@ use std::ops::RangeInclusive;
 
 use once_cell::sync::Lazy;
 use regex::Regex;
+use rsa::{RsaPrivateKey, RsaPublicKey};
 use thiserror::Error as ThisError;
 
 static RE_USERNAME: Lazy<Regex> =
@@ -22,6 +23,18 @@ pub enum UsernameError {
 
     #[error("other error")]
     Other,
+}
+
+#[derive(Debug)]
+pub struct RemoteUserRegistration {
+    pub username: String,
+    pub public_key: RsaPublicKey,
+}
+
+#[derive(Debug)]
+pub struct LocalUserRegistration {
+    pub username: String,
+    pub private_key: RsaPrivateKey,
 }
 
 /// Validates username format.

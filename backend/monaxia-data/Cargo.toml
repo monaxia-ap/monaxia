@@ -7,10 +7,12 @@ edition = "2021"
 anyhow = { workspace = true }
 once_cell = { workspace = true }
 regex = { workspace = true }
+rsa = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 url = { workspace = true }
+uuid = { workspace = true }
 
 toml = "0.7.6"
 

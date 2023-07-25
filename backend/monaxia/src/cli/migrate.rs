@@ -28,8 +28,7 @@ pub struct MigrateSubcommand {
 #[derive(Debug, Clone, Parser)]
 pub enum MxCommand {
     /// Create new migration file.
-    #[clap(name = "migrate:new")]
-    MigrateNew { name: String },
+    New { name: String },
 }
 
 pub async fn execute_migrate_subcommand(
@@ -42,7 +41,7 @@ pub async fn execute_migrate_subcommand(
         None => {
             execute_migration(container).await?;
         }
-        Some(MxCommand::MigrateNew { name }) => {
+        Some(MxCommand::New { name }) => {
             create_new_migration(&name).await?;
         }
     }

@@ -20,3 +20,11 @@ pub enum LocalUserDef {
     UserId,
     PrivateKey,
 }
+
+#[derive(Debug)]
+pub struct UserInsertion {
+    pub id: String,
+    pub username: String,
+    pub domain: String,
+    pub public_key: String,
+}
