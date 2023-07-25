@@ -2,19 +2,26 @@ use super::schema::{LocalUserDef, UserDef};
 
 use sea_query::{Expr, Func, JoinType, PostgresQueryBuilder as QueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
-use sqlx::{PgPool as Pool, Result as SqlxResult};
+use sqlx::{Acquire, Postgres as DB, Result as SqlxResult};
 
-pub async fn fetch_local_users_count(pool: &Pool) -> SqlxResult<usize> {
+pub async fn fetch_local_users_count<'a, A: Acquire<'a, Database = DB>>(
+    conn: A,
+) -> SqlxResult<usize> {
+    let mut conn = conn.acquire().await?;
     let (query, _) = Query::select()
         .expr(Func::count(Expr::col(LocalUserDef::UserId)))
         .from(LocalUserDef::Table)
         .build_sqlx(QueryBuilder);
-    let (value,): (i64,) = sqlx::query_as(&query).fetch_one(pool).await?;
+    let (value,): (i64,) = sqlx::query_as(&query).fetch_one(&mut *conn).await?;
 
     Ok(value as usize)
 }
 
-pub async fn local_user_occupied(pool: &Pool, username: &str) -> SqlxResult<bool> {
+pub async fn local_user_occupied<'a, A: Acquire<'a, Database = DB>>(
+    conn: A,
+    username: &str,
+) -> SqlxResult<bool> {
+    let mut conn = conn.acquire().await?;
     let (query, values) = Query::select()
         .column((UserDef::Table, UserDef::Id))
         .from(LocalUserDef::Table)
@@ -28,7 +35,7 @@ pub async fn local_user_occupied(pool: &Pool, username: &str) -> SqlxResult<bool
         .build_sqlx(QueryBuilder);
 
     let occupied: Option<(String,)> = sqlx::query_as_with(&query, values)
-        .fetch_optional(pool)
+        .fetch_optional(&mut *conn)
         .await?;
     Ok(occupied.is_some())
 }
