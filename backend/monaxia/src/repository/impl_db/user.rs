@@ -3,10 +3,13 @@ use crate::repository::{RepoResult, Repository, UserRepository};
 use async_trait::async_trait;
 use monaxia_data::{
     id::now_order58,
-    user::{LocalUserRegistration, RemoteUserRegistration},
+    user::{LocalUser, LocalUserRegistration, RemoteUserRegistration},
 };
 use monaxia_db::user::{
-    action::{fetch_local_users_count, local_user_occupied, register_local_user, register_user},
+    action::{
+        fetch_local_users_count, find_local_user, local_user_occupied, register_local_user,
+        register_user,
+    },
     schema::{LocalUserInsertion, UserInsertion},
 };
 use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding};
@@ -88,5 +91,15 @@ impl UserRepository for UserRepositoryImpl {
         register_user(&mut conn, insertion).await?;
 
         todo!();
+    }
+
+    async fn find_local_user(&self, username: &str) -> RepoResult<Option<LocalUser>> {
+        let mut conn = self.0.acquire().await?;
+        let user = find_local_user(&mut conn, username).await?;
+        Ok(user.map(|u| LocalUser {
+            id: u.id,
+            id_seq: u.id_seq.to_string(),
+            username: u.username,
+        }))
     }
 }

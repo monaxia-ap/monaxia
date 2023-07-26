@@ -67,7 +67,8 @@ async fn create_user(state: AppState) -> Result<()> {
         _ => bail!("User creation aborted"),
     }
 
-    container.domain.acknowledge(&config.server.domain).await?;
+    let local_origin = config.cached.acct_origin();
+    container.domain.acknowledge(&local_origin).await?;
     let user_id = container
         .user
         .register_local_user(
@@ -75,7 +76,7 @@ async fn create_user(state: AppState) -> Result<()> {
                 username,
                 private_key,
             },
-            &config.server.domain,
+            &local_origin,
         )
         .await?;
 

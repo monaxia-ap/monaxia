@@ -1,18 +1,17 @@
 use super::schema::{
     Nodeinfo, NodeinfoMetadata, NodeinfoServices, NodeinfoSoftware, NodeinfoUsage,
     NodeinfoUsageUsers, WebfingerQuery, WellknownNodeinfo, WellknownNodeinfoLink,
-    WellknownWebfinger,
+    WellknownWebfinger, WellknownWebfingerLink,
 };
 use crate::{
     constant::{SOFTWARE_NAME, VERSION},
     web::{
-        error::{bail_other, map_err_anyhow, map_err_repository, MxResult},
+        error::{bail_other, map_err_generic, map_err_repository, MxResult},
         extract::RjQuery,
         state::AppState,
     },
 };
 
-use anyhow::Context;
 use axum::{
     extract::{Query, State},
     http::{header::CONTENT_TYPE, StatusCode},
@@ -20,14 +19,10 @@ use axum::{
     Json,
 };
 use axum_extra::extract::WithRejection;
-use monaxia_data::config::UserRegistration;
+use monaxia_data::{ap::Acct, config::UserRegistration};
 
 pub async fn host_meta(State(state): State<AppState>) -> MxResult<Response<String>> {
-    let server_base_url = state
-        .config
-        .server
-        .server_base_url()
-        .map_err(map_err_anyhow)?;
+    let server_base_url = state.config.cached.server_base_url();
     let response = format!(
         r#"<?xml version="1.0"?>
 <XRD xmlns="http://docs.oasis-open.org/ns/xri/xrd-1.0">
@@ -42,12 +37,39 @@ pub async fn host_meta(State(state): State<AppState>) -> MxResult<Response<Strin
 }
 
 pub async fn wellknown_webfinger(
+    State(state): State<AppState>,
     WithRejection(Query(query), _): RjQuery<WebfingerQuery>,
-) -> MxResult<Json<WellknownWebfinger>> {
-    bail_other(
-        StatusCode::NOT_FOUND,
-        format!("user {} not found", query.resource),
-    )
+) -> MxResult<Response<String>> {
+    let (config, container) = (state.config, state.container);
+
+    let acct = Acct::parse(&query.resource)
+        .map_err(|e| map_err_generic(e, StatusCode::UNPROCESSABLE_ENTITY))?;
+    if acct.origin() != config.cached.acct_origin() {
+        bail_other(StatusCode::NOT_FOUND, "origin does not match")?;
+    }
+
+    let Some(local_user) = container.user.find_local_user(acct.username()).await.map_err(map_err_repository)?else {
+        return bail_other(StatusCode::NOT_FOUND, format!("user {} not found", acct.username()));
+    };
+
+    let user_url = config
+        .cached
+        .server_base_url()
+        .join(&format!("/users/{}", local_user.id))
+        .expect("URL error");
+    let data = WellknownWebfinger {
+        subject: acct.to_subject(),
+        links: vec![WellknownWebfingerLink {
+            rel: "self".into(),
+            r#type: "application/activity+json".into(),
+            href: user_url,
+        }],
+    };
+    let body = serde_json::to_string(&data).expect("JSON error");
+    Ok(Response::builder()
+        .header(CONTENT_TYPE, "application/jrd+json; charset=UTF-8")
+        .body(body)
+        .expect("cannot construct"))
 }
 
 pub async fn wellknown_nodeinfo(
@@ -55,10 +77,10 @@ pub async fn wellknown_nodeinfo(
 ) -> MxResult<Json<WellknownNodeinfo>> {
     let nodeinfo_url = state
         .config
-        .server
+        .cached
         .server_base_url()
-        .and_then(|bu| bu.join("/nodeinfo/2.1").context("URL error"))
-        .map_err(map_err_anyhow)?;
+        .join("/nodeinfo/2.1")
+        .expect("URL error");
 
     Ok(Json(WellknownNodeinfo {
         links: vec![WellknownNodeinfoLink {

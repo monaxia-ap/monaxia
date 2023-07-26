@@ -37,6 +37,13 @@ pub struct LocalUserRegistration {
     pub private_key: RsaPrivateKey,
 }
 
+#[derive(Debug, Clone)]
+pub struct LocalUser {
+    pub id: String,
+    pub id_seq: String,
+    pub username: String,
+}
+
 /// Validates username format.
 pub fn validate_username_format(
     input: &str,

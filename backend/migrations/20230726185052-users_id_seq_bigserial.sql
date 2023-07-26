@@ -1,0 +1,2 @@
+ALTER TABLE "users"
+    ALTER COLUMN "id_seq" TYPE BIGINT;

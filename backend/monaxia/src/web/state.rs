@@ -27,9 +27,8 @@ pub async fn construct_state(config_filename: &Path) -> Result<AppState> {
 #[cfg(test)]
 pub fn construct_state_test() -> AppState {
     use crate::repository::construct_container_test;
-    use monaxia_data::config::make_default_config;
 
-    let config = make_default_config();
+    let config = Default::default();
     let container = construct_container_test();
 
     AppState {

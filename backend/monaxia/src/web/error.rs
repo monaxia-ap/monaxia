@@ -1,6 +1,7 @@
 use crate::repository::RepoError;
 
-use anyhow::Error as AnyhowError;
+use std::error::Error as StdError;
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -40,9 +41,9 @@ pub fn bail_other<T>(status_code: StatusCode, reason: impl Into<String>) -> MxRe
     })
 }
 
-pub fn map_err_anyhow(err: AnyhowError) -> ErrorResponse {
+pub fn map_err_generic<E: StdError>(err: E, status_code: StatusCode) -> ErrorResponse {
     ErrorResponse {
-        status_code: StatusCode::INTERNAL_SERVER_ERROR,
+        status_code,
         error: ErrorType::OtherError,
         reason: err.to_string(),
     }

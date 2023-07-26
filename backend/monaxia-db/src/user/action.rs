@@ -1,4 +1,4 @@
-use super::schema::{LocalUserDef, LocalUserInsertion, UserDef, UserInsertion};
+use super::schema::{LocalUser, LocalUserDef, LocalUserInsertion, UserDef, UserInsertion};
 
 use sea_query::{Expr, Func, JoinType, PostgresQueryBuilder as QueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
@@ -68,4 +68,31 @@ pub async fn register_local_user<'a>(
 
     sqlx::query_with(&query, values).execute(&mut *conn).await?;
     Ok(())
+}
+
+pub async fn find_local_user(
+    conn: &mut Connection,
+    username: &str,
+) -> SqlxResult<Option<LocalUser>> {
+    let (query, values) = Query::select()
+        .expr_as(Expr::col((UserDef::Table, UserDef::Id)), UserDef::Id)
+        .expr_as(Expr::col((UserDef::Table, UserDef::IdSeq)), UserDef::IdSeq)
+        .expr_as(
+            Expr::col((UserDef::Table, UserDef::Username)),
+            UserDef::Username,
+        )
+        .from(LocalUserDef::Table)
+        .join(
+            JoinType::InnerJoin,
+            UserDef::Table,
+            Expr::col((LocalUserDef::Table, LocalUserDef::UserId))
+                .equals((UserDef::Table, UserDef::Id)),
+        )
+        .cond_where(Expr::col((UserDef::Table, UserDef::Username)).eq(username))
+        .build_sqlx(QueryBuilder);
+
+    let row = sqlx::query_as_with(&query, values)
+        .fetch_optional(&mut *conn)
+        .await?;
+    Ok(row)
 }

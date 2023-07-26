@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use monaxia_data::migration::Migration;
-use monaxia_data::user::{LocalUserRegistration, RemoteUserRegistration};
+use monaxia_data::user::{LocalUserRegistration, RemoteUserRegistration, LocalUser};
 use time::OffsetDateTime;
 
 #[derive(Clone)]
@@ -66,6 +66,9 @@ pub trait UserRepository: Repository {
         registration: RemoteUserRegistration,
         domain: &str,
     ) -> RepoResult<String>;
+
+    /// Finds a local user by username.
+    async fn find_local_user(&self, username: &str) -> RepoResult<Option<LocalUser>>;
 }
 
 #[async_trait]
