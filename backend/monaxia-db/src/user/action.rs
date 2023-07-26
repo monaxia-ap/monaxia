@@ -1,13 +1,10 @@
-use super::schema::{LocalUserDef, UserDef};
+use super::schema::{LocalUserDef, LocalUserInsertion, UserDef, UserInsertion};
 
 use sea_query::{Expr, Func, JoinType, PostgresQueryBuilder as QueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
-use sqlx::{Acquire, Postgres as DB, Result as SqlxResult};
+use sqlx::{PgConnection as Connection, Result as SqlxResult};
 
-pub async fn fetch_local_users_count<'a, A: Acquire<'a, Database = DB>>(
-    conn: A,
-) -> SqlxResult<usize> {
-    let mut conn = conn.acquire().await?;
+pub async fn fetch_local_users_count(conn: &mut Connection) -> SqlxResult<usize> {
     let (query, _) = Query::select()
         .expr(Func::count(Expr::col(LocalUserDef::UserId)))
         .from(LocalUserDef::Table)
@@ -17,11 +14,7 @@ pub async fn fetch_local_users_count<'a, A: Acquire<'a, Database = DB>>(
     Ok(value as usize)
 }
 
-pub async fn local_user_occupied<'a, A: Acquire<'a, Database = DB>>(
-    conn: A,
-    username: &str,
-) -> SqlxResult<bool> {
-    let mut conn = conn.acquire().await?;
+pub async fn local_user_occupied(conn: &mut Connection, username: &str) -> SqlxResult<bool> {
     let (query, values) = Query::select()
         .column((UserDef::Table, UserDef::Id))
         .from(LocalUserDef::Table)
@@ -38,4 +31,41 @@ pub async fn local_user_occupied<'a, A: Acquire<'a, Database = DB>>(
         .fetch_optional(&mut *conn)
         .await?;
     Ok(occupied.is_some())
+}
+
+pub async fn register_user(conn: &mut Connection, insertion: UserInsertion) -> SqlxResult<()> {
+    let (query, values) = Query::insert()
+        .into_table(UserDef::Table)
+        .columns([
+            UserDef::Id,
+            UserDef::Username,
+            UserDef::Domain,
+            UserDef::PublicKey,
+        ])
+        .values([
+            insertion.id.into(),
+            insertion.username.into(),
+            insertion.domain.into(),
+            insertion.public_key.into(),
+        ])
+        .expect("failed to encode")
+        .build_sqlx(QueryBuilder);
+
+    sqlx::query_with(&query, values).execute(&mut *conn).await?;
+    Ok(())
+}
+
+pub async fn register_local_user<'a>(
+    conn: &'a mut Connection,
+    insertion: LocalUserInsertion<'a>,
+) -> SqlxResult<()> {
+    let (query, values) = Query::insert()
+        .into_table(LocalUserDef::Table)
+        .columns([LocalUserDef::UserId, LocalUserDef::PrivateKey])
+        .values([insertion.user_id.into(), insertion.private_key.into()])
+        .expect("failed to encode")
+        .build_sqlx(QueryBuilder);
+
+    sqlx::query_with(&query, values).execute(&mut *conn).await?;
+    Ok(())
 }

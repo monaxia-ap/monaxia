@@ -11,7 +11,8 @@ impl Repository for DomainpositoryImpl {}
 #[async_trait]
 impl DomainRepository for DomainpositoryImpl {
     async fn acknowledge(&self, domain: &str) -> RepoResult<bool> {
-        let new_register = register_domain(&self.0, domain).await?;
+        let mut conn = self.0.acquire().await?;
+        let new_register = register_domain(&mut conn, domain).await?;
         Ok(new_register)
     }
 }

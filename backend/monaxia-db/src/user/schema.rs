@@ -28,3 +28,9 @@ pub struct UserInsertion {
     pub domain: String,
     pub public_key: String,
 }
+
+#[derive(Debug)]
+pub struct LocalUserInsertion<'a> {
+    pub user_id: String,
+    pub private_key: &'a str, // this struct does not clear
+}

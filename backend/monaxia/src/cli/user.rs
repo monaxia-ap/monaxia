@@ -3,10 +3,7 @@ use crate::web::state::AppState;
 use anyhow::{bail, Result};
 use clap::Parser;
 use inquire::{validator::Validation, Confirm, Text};
-use monaxia_data::{
-    id::now_order58,
-    user::{validate_username_format, LocalUserRegistration},
-};
+use monaxia_data::user::{validate_username_format, LocalUserRegistration};
 use rand::prelude::*;
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
@@ -71,7 +68,7 @@ async fn create_user(state: AppState) -> Result<()> {
     }
 
     container.domain.acknowledge(&config.server.domain).await?;
-    container
+    let user_id = container
         .user
         .register_local_user(
             LocalUserRegistration {
@@ -83,5 +80,6 @@ async fn create_user(state: AppState) -> Result<()> {
         .await?;
 
     println!("Registered successfully!");
+    println!("User ID is {user_id}");
     Ok(())
 }

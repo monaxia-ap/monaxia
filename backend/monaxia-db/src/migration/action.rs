@@ -4,11 +4,10 @@ use sea_query::{
     ColumnDef, Index, IndexOrder, Order, PostgresQueryBuilder as QueryBuilder, Query, Table,
 };
 use sea_query_binder::SqlxBinder;
-use sqlx::{Acquire, Postgres as DB, Result as SqlxResult};
+use sqlx::{PgConnection as Connection, Result as SqlxResult};
 use time::OffsetDateTime;
 
-pub async fn ensure_migrations_table<'a, A: Acquire<'a, Database = DB>>(conn: A) -> SqlxResult<()> {
-    let mut conn = conn.acquire().await?;
+pub async fn ensure_migrations_table(conn: &mut Connection) -> SqlxResult<()> {
     let query = Table::create()
         .if_not_exists()
         .table(MigrationDef::Table)
@@ -43,10 +42,9 @@ pub async fn ensure_migrations_table<'a, A: Acquire<'a, Database = DB>>(conn: A)
     Ok(())
 }
 
-pub async fn fetch_last_migration<'a, A: Acquire<'a, Database = DB>>(
-    conn: A,
+pub async fn fetch_last_migration(
+    conn: &mut Connection,
 ) -> SqlxResult<Option<Migration>> {
-    let mut conn = conn.acquire().await?;
     let (query, values) = Query::select()
         .columns([
             MigrationDef::Id,
@@ -63,12 +61,11 @@ pub async fn fetch_last_migration<'a, A: Acquire<'a, Database = DB>>(
     Ok(row)
 }
 
-pub async fn register_migration<'a, A: Acquire<'a, Database = DB>>(
-    conn: A,
+pub async fn register_migration(
+    conn: &mut Connection,
     latest_migration_datetime: OffsetDateTime,
     execution_datetime: OffsetDateTime,
 ) -> SqlxResult<Migration> {
-    let mut conn = conn.acquire().await?;
     let (query, values) = Query::insert()
         .into_table(MigrationDef::Table)
         .columns([MigrationDef::LastMigration, MigrationDef::ExecutedAt])
@@ -76,7 +73,9 @@ pub async fn register_migration<'a, A: Acquire<'a, Database = DB>>(
         .expect("failed to encode")
         .returning_all()
         .build_sqlx(QueryBuilder);
-    let row = sqlx::query_as_with(&query, values).fetch_one(&mut *conn).await?;
+    let row = sqlx::query_as_with(&query, values)
+        .fetch_one(&mut *conn)
+        .await?;
 
     Ok(row)
 }

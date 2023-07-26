@@ -19,12 +19,14 @@ impl Repository for MigrationRepositoryImpl {}
 #[async_trait]
 impl MigrationRepository for MigrationRepositoryImpl {
     async fn ensure_table(&self) -> RepoResult<()> {
-        ensure_migrations_table(&self.0).await?;
+        let mut conn = self.0.acquire().await?;
+        ensure_migrations_table(&mut conn).await?;
         Ok(())
     }
 
     async fn fetch_last_migration(&self) -> RepoResult<Option<Migration>> {
-        let migration = fetch_last_migration(&self.0).await?;
+        let mut conn = self.0.acquire().await?;
+        let migration = fetch_last_migration(&mut conn).await?;
         Ok(migration)
     }
 
@@ -51,7 +53,8 @@ impl MigrationRepository for MigrationRepositoryImpl {
         last_migration: OffsetDateTime,
         now: OffsetDateTime,
     ) -> RepoResult<Migration> {
-        let new_migration = register_migration(&self.0, last_migration, now).await?;
+        let mut conn = self.0.acquire().await?;
+        let new_migration = register_migration(&mut conn, last_migration, now).await?;
         Ok(new_migration)
     }
 }
