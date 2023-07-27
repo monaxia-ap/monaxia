@@ -1,26 +1,28 @@
-mod meta {
-    pub mod endpoint;
-    mod schema;
-}
-
 mod error;
 mod extract;
 mod jsonld;
+mod routes;
 pub mod state;
 
 use axum::{routing::get, Router};
 
 pub fn construct_router(state_source: state::AppState) -> Router<()> {
-    Router::new()
-        .route("/host-meta", get(meta::endpoint::host_meta))
+    let meta_router = Router::new()
+        .route("/host-meta", get(routes::meta::host_meta))
         .route(
             "/.well-known/webfinger",
-            get(meta::endpoint::wellknown_webfinger),
+            get(routes::meta::wellknown_webfinger),
         )
         .route(
             "/.well-known/nodeinfo",
-            get(meta::endpoint::wellknown_nodeinfo),
+            get(routes::meta::wellknown_nodeinfo),
         )
-        .route("/nodeinfo/2.1", get(meta::endpoint::nodeinfo))
+        .route("/nodeinfo/2.1", get(routes::meta::nodeinfo));
+
+    let users_router = Router::new();
+
+    Router::new()
+        .merge(meta_router)
+        .nest("/users", users_router)
         .with_state(state_source)
 }

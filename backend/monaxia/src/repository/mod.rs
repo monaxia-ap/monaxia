@@ -1,15 +1,17 @@
 pub mod error;
 mod impl_db;
 
-pub use self::error::{Error as RepoError, Result as RepoResult};
-pub use self::impl_db::construct_container as construct_container_db;
+pub use self::{
+    error::{Error as RepoError, Result as RepoResult},
+    impl_db::construct_container as construct_container_db,
+};
 
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use monaxia_data::migration::Migration;
-use monaxia_data::user::{LocalUserRegistration, RemoteUserRegistration, LocalUser};
+use monaxia_data::user::{LocalUser, LocalUserRegistration, RemoteUserRegistration};
 use time::OffsetDateTime;
 
 #[derive(Clone)]
