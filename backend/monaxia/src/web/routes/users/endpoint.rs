@@ -7,9 +7,9 @@ use crate::web::{
     state::AppState,
 };
 
-use axum::extract::State;
+use axum::{extract::State, http::StatusCode};
 
-pub async fn show(
+pub async fn actor(
     State(state): State<AppState>,
     _: MustAcceptActivityJson,
     PathLocalUser(local_user): PathLocalUser,
@@ -43,4 +43,20 @@ pub async fn show(
             public_key_pem: local_user.public_key,
         },
     }))
+}
+
+pub async fn inbox(
+    State(state): State<AppState>,
+    _: MustAcceptActivityJson,
+    PathLocalUser(local_user): PathLocalUser,
+) -> MxResult<(StatusCode, String)> {
+    Ok((StatusCode::NOT_IMPLEMENTED, "not implemented yet".into()))
+}
+
+pub async fn outbox(
+    State(state): State<AppState>,
+    _: MustAcceptActivityJson,
+    PathLocalUser(local_user): PathLocalUser,
+) -> MxResult<(StatusCode, String)> {
+    Ok((StatusCode::NOT_IMPLEMENTED, "not implemented yet".into()))
 }
