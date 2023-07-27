@@ -19,7 +19,7 @@ pub fn construct_router(state_source: state::AppState) -> Router<()> {
         )
         .route("/nodeinfo/2.1", get(routes::meta::nodeinfo));
 
-    let users_router = Router::new();
+    let users_router = Router::new().route("/:user_id", get(routes::users::show));
 
     Router::new()
         .merge(meta_router)

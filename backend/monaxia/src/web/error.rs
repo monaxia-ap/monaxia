@@ -15,6 +15,11 @@ pub type MxResult<T> = Result<T, ErrorResponse>;
 pub enum ErrorType {
     /// Request extractor failed.
     InvalidRequest,
+
+    /// Content-Type was missing.
+    MissingContentType,
+
+    /// Other error.
     OtherError,
 }
 

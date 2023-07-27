@@ -1359,6 +1359,7 @@ dependencies = [
  "axum-extra",
  "clap",
  "inquire",
+ "mime",
  "monaxia-data",
  "monaxia-db",
  "once_cell",
