@@ -1,4 +1,10 @@
-use crate::repository::{RepoResult, Repository, UserRepository};
+use crate::repository::{
+    r#trait::{
+        user::{UserFind, UserRepository},
+        Repository,
+    },
+    RepoResult,
+};
 
 use async_trait::async_trait;
 use monaxia_data::user::{LocalUser, LocalUserRegistration, RemoteUserRegistration};
@@ -33,7 +39,7 @@ impl UserRepository for UserRepositoryImpl {
         Ok("12345678".into())
     }
 
-    async fn find_local_user(&self, _username: &str) -> RepoResult<Option<LocalUser>> {
+    async fn find_local_user(&self, _user_find: UserFind<'_>) -> RepoResult<Option<LocalUser>> {
         Ok(None)
     }
 }

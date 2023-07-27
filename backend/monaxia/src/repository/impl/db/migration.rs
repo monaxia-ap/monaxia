@@ -1,6 +1,9 @@
-use std::path::PathBuf;
+use crate::repository::{
+    r#trait::{migration::MigrationRepository, Repository},
+    RepoResult,
+};
 
-use crate::repository::{MigrationRepository, RepoResult, Repository};
+use std::path::PathBuf;
 
 use async_trait::async_trait;
 use monaxia_data::migration::Migration;

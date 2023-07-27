@@ -70,7 +70,7 @@ pub async fn register_local_user<'a>(
     Ok(())
 }
 
-pub async fn find_local_user(
+pub async fn find_local_user_by_username(
     conn: &mut Connection,
     username: &str,
 ) -> SqlxResult<Option<LocalUser>> {
@@ -81,6 +81,10 @@ pub async fn find_local_user(
             Expr::col((UserDef::Table, UserDef::Username)),
             UserDef::Username,
         )
+        .expr_as(
+            Expr::col((UserDef::Table, UserDef::PublicKey)),
+            UserDef::PublicKey,
+        )
         .from(LocalUserDef::Table)
         .join(
             JoinType::InnerJoin,
@@ -89,6 +93,37 @@ pub async fn find_local_user(
                 .equals((UserDef::Table, UserDef::Id)),
         )
         .cond_where(Expr::col((UserDef::Table, UserDef::Username)).eq(username))
+        .build_sqlx(QueryBuilder);
+
+    let row = sqlx::query_as_with(&query, values)
+        .fetch_optional(&mut *conn)
+        .await?;
+    Ok(row)
+}
+
+pub async fn find_local_user_by_id(
+    conn: &mut Connection,
+    user_id: &str,
+) -> SqlxResult<Option<LocalUser>> {
+    let (query, values) = Query::select()
+        .expr_as(Expr::col((UserDef::Table, UserDef::Id)), UserDef::Id)
+        .expr_as(Expr::col((UserDef::Table, UserDef::IdSeq)), UserDef::IdSeq)
+        .expr_as(
+            Expr::col((UserDef::Table, UserDef::Username)),
+            UserDef::Username,
+        )
+        .expr_as(
+            Expr::col((UserDef::Table, UserDef::PublicKey)),
+            UserDef::PublicKey,
+        )
+        .from(LocalUserDef::Table)
+        .join(
+            JoinType::InnerJoin,
+            UserDef::Table,
+            Expr::col((LocalUserDef::Table, LocalUserDef::UserId))
+                .equals((UserDef::Table, UserDef::Id)),
+        )
+        .cond_where(Expr::col((UserDef::Table, UserDef::Id)).eq(user_id))
         .build_sqlx(QueryBuilder);
 
     let row = sqlx::query_as_with(&query, values)

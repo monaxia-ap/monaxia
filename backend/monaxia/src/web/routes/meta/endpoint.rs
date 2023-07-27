@@ -5,6 +5,7 @@ use super::schema::{
 };
 use crate::{
     constant::{SOFTWARE_NAME, VERSION},
+    repository::r#trait::user::UserFind,
     web::{
         error::{bail_other, map_err_generic, map_err_repository, MxResult},
         extract::RjQuery,
@@ -48,7 +49,10 @@ pub async fn wellknown_webfinger(
         bail_other(StatusCode::NOT_FOUND, "origin does not match")?;
     }
 
-    let Some(local_user) = container.user.find_local_user(acct.username()).await.map_err(map_err_repository)?else {
+    let Some(local_user) = container.user
+        .find_local_user(UserFind::Username(acct.username()))
+        .await
+        .map_err(map_err_repository)? else {
         return bail_other(StatusCode::NOT_FOUND, format!("user {} not found", acct.username()));
     };
 

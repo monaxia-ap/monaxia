@@ -19,6 +19,9 @@ pub enum ErrorType {
     /// Content-Type was missing.
     MissingContentType,
 
+    /// Something not found.
+    NotFound,
+
     /// Other error.
     OtherError,
 }

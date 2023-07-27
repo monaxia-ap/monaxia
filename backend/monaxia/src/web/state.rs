@@ -1,4 +1,4 @@
-use crate::repository::{construct_container_db, Container};
+use crate::repository::{r#impl::construct_container_db, Container};
 
 use std::{path::Path, sync::Arc};
 
@@ -26,7 +26,7 @@ pub async fn construct_state(config_filename: &Path) -> Result<AppState> {
 
 #[cfg(test)]
 pub fn construct_state_test() -> AppState {
-    use crate::repository::construct_container_test;
+    use crate::repository::r#impl::construct_container_test;
 
     let config = Default::default();
     let container = construct_container_test();

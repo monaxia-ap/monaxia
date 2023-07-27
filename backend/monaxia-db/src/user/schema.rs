@@ -41,4 +41,5 @@ pub struct LocalUser {
     pub id: String,
     pub id_seq: i64,
     pub username: String,
+    pub public_key: String,
 }

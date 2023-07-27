@@ -2,7 +2,7 @@ mod domain;
 mod migration;
 mod user;
 
-use super::Container;
+use crate::repository::Container;
 
 use std::sync::Arc;
 

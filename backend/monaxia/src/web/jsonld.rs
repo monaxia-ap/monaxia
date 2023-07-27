@@ -5,7 +5,7 @@ use serde::{
     de::{value::MapAccessDeserializer, Error as SerdeDeError, MapAccess, Visitor},
     Deserialize, Deserializer, Serialize, Serializer,
 };
-use serde_json::Value as JsonValue;
+use serde_json::{json, Value as JsonValue};
 use url::Url;
 
 pub static JSONLD_OBJECT: Lazy<JsonLd> = Lazy::new(|| JsonLd {
@@ -14,6 +14,10 @@ pub static JSONLD_OBJECT: Lazy<JsonLd> = Lazy::new(|| JsonLd {
             Url::parse("https://www.w3.org/ns/activitystreams").expect("invalid context"),
         ),
         JsonLdContext::Url(Url::parse("https://w3id.org/security/v1").expect("invalid context")),
+        JsonLdContext::Object(json!({
+            "toot": "http://joinmastodon.org/ns#",
+            "discoverable": "toot:discoverable",
+        })),
     ],
 });
 
