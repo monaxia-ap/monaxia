@@ -25,6 +25,7 @@ clap = { version = "4.3.11", features = ["derive"] }
 inquire = "0.6.2"
 mime = "0.3.17"
 rand = "0.8.5"
+tower-http = { version = "0.4.3", features = ["trace"] }
 
 monaxia-data = { workspace = true }
 monaxia-db = { workspace = true }
