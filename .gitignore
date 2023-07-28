@@ -1,3 +1,6 @@
 /compose.yaml
 /config.toml
 /.env
+
+/data/*
+!/data/.gitkeep
