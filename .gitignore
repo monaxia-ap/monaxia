@@ -1,3 +1,5 @@
+/target
+
 /compose.yaml
 /config.toml
 /.env

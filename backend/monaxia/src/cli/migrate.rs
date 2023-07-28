@@ -115,7 +115,7 @@ fn get_migrations_dir() -> Result<PathBuf> {
         }
         Err(VarError::NotPresent) => {
             let curdir = current_dir()?;
-            let migrations_dir = curdir.join("migrations");
+            let migrations_dir = curdir.join("backend/migrations");
             Ok(migrations_dir)
         }
         Err(_) => bail!("failed to retrieve Cargo info"),

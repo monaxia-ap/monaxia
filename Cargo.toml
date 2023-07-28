@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["batan", "monaxia", "monaxia-data", "monaxia-db"]
+members = [
+    "backend/batan",
+    "backend/monaxia",
+    "backend/monaxia-data",
+    "backend/monaxia-db",
+]
 
 [workspace.dependencies]
 anyhow = "1.0.71"
@@ -45,8 +50,8 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 url = { version = "2.4.0", features = ["serde"] }
 uuid = { version = "1.4.1", features = ["v4", "v7", "fast-rng"] }
 
-monaxia-db = { path = "./monaxia-db" }
-monaxia-data = { path = "./monaxia-data" }
+monaxia-db = { path = "./backend/monaxia-db" }
+monaxia-data = { path = "./backend/monaxia-data" }
 
 [profile.dev.package.num-bigint-dig]
 opt-level = 3

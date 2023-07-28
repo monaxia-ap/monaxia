@@ -4,4 +4,5 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub mod mime {
     pub const APPLICATION_ACTIVITY_JSON: &str = "application/activity+json";
+    pub const APPLICATION_LD_JSON: &str = "application/ld+json";
 }

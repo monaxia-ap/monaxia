@@ -1,5 +1,5 @@
 use crate::{
-    constant::mime::APPLICATION_ACTIVITY_JSON,
+    constant::mime::{APPLICATION_ACTIVITY_JSON, APPLICATION_LD_JSON},
     web::error::{ErrorResponse, ErrorType},
 };
 
@@ -17,6 +17,7 @@ use axum::{
 };
 use mime::{Mime, APPLICATION_JSON, TEXT_HTML};
 use serde::{de::DeserializeOwned, Serialize};
+use tracing::info;
 
 /// Accept header type.
 #[derive(Debug, Clone, Copy)]
@@ -131,12 +132,17 @@ fn ap_accept(headers: &HeaderMap) -> ApAccept {
         return ApAccept::Html;
     };
 
-    let mimes = accept_str.split(';').map(|a| a.trim());
+    let mimes = accept_str.split(',').map(|a| a.trim());
     for mime_str in mimes {
+        info!("MIME: {mime_str:?}");
         let Ok(mime) = mime_str.parse::<Mime>() else {
             continue;
         };
-        if mime == APPLICATION_ACTIVITY_JSON || mime == APPLICATION_JSON {
+        info!("MIME: {mime:?}");
+        if mime == APPLICATION_ACTIVITY_JSON
+            || mime == APPLICATION_LD_JSON
+            || mime == APPLICATION_JSON
+        {
             return ApAccept::ActivityJson;
         } else if mime == TEXT_HTML {
             return ApAccept::Html;
