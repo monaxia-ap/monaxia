@@ -2,10 +2,10 @@
 bind = "0.0.0.0:3000"
 schema = "http"
 domain = "localhost"
-port = 3000
+# port = 443
 
 [database]
-url = "postgres://localhost:5432/monaxia"
+url = "postgres://monaxia:einsamkeit@postgres:5432/monaxia"
 
 [user]
 registration = "closed"

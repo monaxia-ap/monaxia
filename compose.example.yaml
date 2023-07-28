@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  monaxia:
+    build:
+      dockerfile: "./docker/Dockerfile"
+      context: "./"
+    restart: "always"
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+      redis:
+        condition: "service_healthy"
+    volumes:
+      - "./config.toml:/monaxia/config.toml"
+      - "./data/monaxia:/monaxia/data"
+    ports:
+      - "3000:3000"
+
+  postgres:
+    image: "postgres:15-alpine"
+    env_file:
+      - "./.env"
+    volumes:
+      - "./data/postgres:/var/lib/postgresql/data"
+    expose:
+      - 5432
+    healthcheck:
+      test: ["redis-cli", "ping"]
+      interval: "5s"
+      retries: 20
+
+  redis:
+    image: "redis:7-alpine"
+    env_file:
+      - "./.env"
+    volumes:
+      - "./data/redis:/data"
+    expose:
+      - 6379
+    healthcheck:
+      test: ["pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
+      interval: "5s"
+      retries: 20
