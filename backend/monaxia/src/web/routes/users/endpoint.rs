@@ -47,7 +47,7 @@ pub async fn actor(
 
 pub async fn inbox(
     State(state): State<AppState>,
-    _: MustAcceptActivityJson,
+    // _: MustAcceptActivityJson,
     PathLocalUser(local_user): PathLocalUser,
 ) -> MxResult<(StatusCode, String)> {
     Ok((StatusCode::NOT_IMPLEMENTED, "not implemented yet".into()))
@@ -55,7 +55,7 @@ pub async fn inbox(
 
 pub async fn outbox(
     State(state): State<AppState>,
-    _: MustAcceptActivityJson,
+    // _: MustAcceptActivityJson,
     PathLocalUser(local_user): PathLocalUser,
 ) -> MxResult<(StatusCode, String)> {
     Ok((StatusCode::NOT_IMPLEMENTED, "not implemented yet".into()))
