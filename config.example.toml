@@ -1,7 +1,7 @@
 [server]
 bind = "0.0.0.0:3000"
-schema = "http"
-domain = "localhost"
+schema = "https"
+domain = "your-domain.tld"
 # port = 443
 
 [database]
