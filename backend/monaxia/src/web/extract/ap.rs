@@ -134,11 +134,9 @@ fn ap_accept(headers: &HeaderMap) -> ApAccept {
 
     let mimes = accept_str.split(',').map(|a| a.trim());
     for mime_str in mimes {
-        info!("MIME: {mime_str:?}");
         let Ok(mime) = mime_str.parse::<Mime>() else {
             continue;
         };
-        info!("MIME: {mime:?}");
         if mime == APPLICATION_ACTIVITY_JSON
             || mime == APPLICATION_LD_JSON
             || mime == APPLICATION_JSON
