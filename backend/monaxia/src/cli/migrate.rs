@@ -50,7 +50,7 @@ pub async fn execute_migrate_subcommand(
 
 async fn create_new_migration(name: &str) -> Result<()> {
     let migrations_dir = get_migrations_dir()?;
-    let now = OffsetDateTime::now_local().expect("cannot fetch local time");
+    let now = OffsetDateTime::now_utc();
     let dt_str = now
         .format(&MIGRATION_TIMESTAMP_FORMAT)
         .expect("invalid datetime format");
@@ -66,22 +66,18 @@ async fn create_new_migration(name: &str) -> Result<()> {
 async fn execute_migration(container: Container) -> Result<()> {
     info!("executing migration...");
 
-    let now = OffsetDateTime::now_local()?;
-    let local_offset = now.offset();
-
     container.migration.ensure_table().await?;
 
-    // local offset change is potentially unsafe manipulation
+    let now = OffsetDateTime::now_utc();
     let last_migration = container.migration.fetch_last_migration().await?;
-    let local_oldest = OffsetDateTime::UNIX_EPOCH.to_offset(local_offset);
     let last_migrated = last_migration
         .as_ref()
-        .map(|m| m.last_migration.to_offset(local_offset))
-        .unwrap_or(local_oldest);
+        .map(|m| m.last_migration)
+        .unwrap_or(OffsetDateTime::UNIX_EPOCH);
     let last_executed = last_migration
         .as_ref()
-        .map(|m| m.executed_at.to_offset(local_offset))
-        .unwrap_or(local_oldest);
+        .map(|m| m.executed_at)
+        .unwrap_or(OffsetDateTime::UNIX_EPOCH);
 
     if last_executed >= now {
         error!("current time is {now}, but last migration executed at {last_executed}");
@@ -154,13 +150,11 @@ async fn get_migrations_file(
             warn!("migration file {path:?} has incorrect filename format, skipping");
             continue;
         };
-        let datetime = match PrimitiveDateTime::parse(filename_dt, &MIGRATION_TIMESTAMP_FORMAT) {
-            Ok(dt) => dt.assume_offset(filter_after.offset()),
-            Err(err) => {
-                warn!("migration file timestamp has incorrect format, skipping ({err})");
-                continue;
-            }
+        let Ok(datetime) = PrimitiveDateTime::parse(filename_dt, &MIGRATION_TIMESTAMP_FORMAT) else {
+            warn!("migration file timestamp has incorrect format, skipping");
+            continue;
         };
+        let datetime = datetime.assume_utc();
         if datetime <= filter_after {
             continue;
         }

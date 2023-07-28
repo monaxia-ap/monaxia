@@ -35,7 +35,6 @@ time = { version = "0.3.23", features = [
     "alloc",
     "formatting",
     "parsing",
-    "local-offset",
     "serde",
 ] }
 thiserror = "1.0.44"
