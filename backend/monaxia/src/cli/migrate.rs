@@ -1,7 +1,7 @@
 use crate::{repository::Container, web::state::AppState};
 
 use std::{
-    env::var as env_var,
+    env::{current_dir, var as env_var, VarError},
     path::{Path, PathBuf},
     process::Command,
 };
@@ -103,19 +103,27 @@ async fn execute_migration(container: Container) -> Result<()> {
 }
 
 fn get_migrations_dir() -> Result<PathBuf> {
-    let cargo = env_var("CARGO").context("cannot locate cargo")?;
-    let workspace_file = String::from_utf8(
-        Command::new(cargo)
-            .args(["locate-project", "--workspace", "--message-format=plain"])
-            .output()?
-            .stdout,
-    )?;
-    let migrations_dir = Path::new(workspace_file.trim())
-        .parent()
-        .context("invalid workspace root")?
-        .join("migrations");
-
-    Ok(migrations_dir)
+    match env_var("CARGO") {
+        Ok(cargo) => {
+            let workspace_file = String::from_utf8(
+                Command::new(cargo)
+                    .args(["locate-project", "--workspace", "--message-format=plain"])
+                    .output()?
+                    .stdout,
+            )?;
+            let migrations_dir = Path::new(workspace_file.trim())
+                .parent()
+                .context("invalid workspace root")?
+                .join("migrations");
+            Ok(migrations_dir)
+        }
+        Err(VarError::NotPresent) => {
+            let curdir = current_dir()?;
+            let migrations_dir = curdir.join("migrations");
+            Ok(migrations_dir)
+        }
+        Err(_) => bail!("failed to retrieve Cargo info"),
+    }
 }
 
 async fn get_migrations_file(
