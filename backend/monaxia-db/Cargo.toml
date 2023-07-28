@@ -1,0 +1,10 @@
+[package]
+name = "monaxia-db"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sea-query = { workspace = true }
+sea-query-binder = { workspace = true }
+sqlx = { workspace = true }
+time = { workspace = true }

@@ -1,0 +1,5 @@
+[alias]
+mx = "run --package monaxia --"
+
+[build]
+rustflags = ["--cfg", "uuid_unstable"]
