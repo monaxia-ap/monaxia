@@ -20,10 +20,9 @@ ENV PATH="/monaxia:/usr/local/bin:/usr/bin:/bin:/sbin"
 RUN apt-get update \
     && apt-get upgrade \
     && apt-get install -y --no-install-recommends \
-        tzdata curl ffmpeg \
+        curl ffmpeg \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists \
-    && cp -f "/usr/share/zoneinfo/${TZ}" "/etc/localtime"
+    && rm -rf /var/lib/apt/lists
 
 RUN groupadd -g 991 monaxia && useradd -l -u 991 -g 991 -m -d /monaxia monaxia
 USER monaxia
