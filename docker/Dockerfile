@@ -15,7 +15,6 @@ COPY ./frontend .
 
 FROM debian:bookworm-slim
 LABEL maintainer="kb10uy"
-ENV TZ="Asia/Tokyo"
 ENV PATH="/monaxia:/usr/local/bin:/usr/bin:/bin:/sbin"
 
 RUN apt-get update \
