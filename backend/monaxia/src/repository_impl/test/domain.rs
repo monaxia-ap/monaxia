@@ -1,8 +1,8 @@
-use crate::repository::{
-    r#trait::{domain::DomainRepository, Repository},
+use async_trait::async_trait;
+use monaxia_repository::{
+    repo::{domain::DomainRepository, Repository},
     RepoResult,
 };
-use async_trait::async_trait;
 
 pub struct DomainpositoryImpl;
 

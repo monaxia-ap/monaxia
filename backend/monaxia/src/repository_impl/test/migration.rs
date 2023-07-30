@@ -1,12 +1,11 @@
-use crate::repository::{
-    r#trait::{migration::MigrationRepository, Repository},
-    RepoResult,
-};
-
 use std::path::PathBuf;
 
 use async_trait::async_trait;
 use monaxia_data::migration::Migration;
+use monaxia_repository::{
+    repo::{migration::MigrationRepository, Repository},
+    RepoResult,
+};
 use time::OffsetDateTime;
 
 pub struct MigrationRepositoryImpl;

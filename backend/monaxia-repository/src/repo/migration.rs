@@ -1,5 +1,5 @@
 use super::Repository;
-use crate::repository::RepoResult;
+use crate::RepoResult;
 
 use std::path::PathBuf;
 

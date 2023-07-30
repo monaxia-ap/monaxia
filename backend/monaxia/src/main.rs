@@ -1,6 +1,6 @@
 mod cli;
 mod constant;
-mod repository;
+mod repository_impl;
 mod web;
 
 use anyhow::Result;

@@ -5,6 +5,8 @@ members = [
     "backend/monaxia",
     "backend/monaxia-data",
     "backend/monaxia-db",
+    "backend/monaxia-job",
+    "backend/monaxia-repository",
 ]
 
 [workspace.dependencies]
@@ -50,8 +52,10 @@ tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 url = { version = "2.4.0", features = ["serde"] }
 uuid = { version = "1.4.1", features = ["v4", "v7", "fast-rng"] }
 
-monaxia-db = { path = "./backend/monaxia-db" }
 monaxia-data = { path = "./backend/monaxia-data" }
+monaxia-db = { path = "./backend/monaxia-db" }
+monaxia-job = { path = "./backend/monaxia-job" }
+monaxia-repository = { path = "./backend/monaxia-repository" }
 
 [profile.dev.package.num-bigint-dig]
 opt-level = 3

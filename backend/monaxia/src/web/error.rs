@@ -1,4 +1,4 @@
-use crate::repository::RepoError;
+use monaxia_repository::RepoError;
 
 use std::error::Error as StdError;
 

@@ -1,14 +1,13 @@
-use crate::repository::{
-    r#trait::{migration::MigrationRepository, Repository},
-    RepoResult,
-};
-
 use std::path::PathBuf;
 
 use async_trait::async_trait;
 use monaxia_data::migration::Migration;
 use monaxia_db::migration::action::{
     ensure_migrations_table, fetch_last_migration, register_migration,
+};
+use monaxia_repository::{
+    repo::{migration::MigrationRepository, Repository},
+    RepoResult,
 };
 use sqlx::{Executor, PgPool as Pool};
 use time::OffsetDateTime;

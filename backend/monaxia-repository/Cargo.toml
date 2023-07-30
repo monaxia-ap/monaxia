@@ -1,0 +1,16 @@
+[package]
+name = "monaxia-repository"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = { workspace = true }
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+monaxia-data = { workspace = true }

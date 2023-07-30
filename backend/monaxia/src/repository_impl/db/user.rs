@@ -1,11 +1,3 @@
-use crate::repository::{
-    r#trait::{
-        user::{UserFind, UserRepository},
-        Repository,
-    },
-    RepoResult,
-};
-
 use async_trait::async_trait;
 use monaxia_data::{
     id::now_order58,
@@ -17,6 +9,13 @@ use monaxia_db::user::{
         local_user_occupied, register_local_user, register_user,
     },
     schema::{LocalUserInsertion, UserInsertion},
+};
+use monaxia_repository::{
+    repo::{
+        user::{UserFind, UserRepository},
+        Repository,
+    },
+    RepoResult,
 };
 use rsa::pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding};
 use sqlx::{Acquire, PgPool as Pool};

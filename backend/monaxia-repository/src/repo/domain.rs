@@ -1,5 +1,5 @@
 use super::Repository;
-use crate::repository::RepoResult;
+use crate::RepoResult;
 
 use async_trait::async_trait;
 

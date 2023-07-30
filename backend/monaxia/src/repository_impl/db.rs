@@ -2,7 +2,7 @@ mod domain;
 mod migration;
 mod user;
 
-use crate::repository::Container;
+use monaxia_repository::Container;
 
 use std::sync::Arc;
 

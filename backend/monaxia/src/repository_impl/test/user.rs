@@ -1,13 +1,12 @@
-use crate::repository::{
-    r#trait::{
+use async_trait::async_trait;
+use monaxia_data::user::{LocalUser, LocalUserRegistration, RemoteUserRegistration};
+use monaxia_repository::{
+    repo::{
         user::{UserFind, UserRepository},
         Repository,
     },
     RepoResult,
 };
-
-use async_trait::async_trait;
-use monaxia_data::user::{LocalUser, LocalUserRegistration, RemoteUserRegistration};
 
 pub struct UserRepositoryImpl;
 

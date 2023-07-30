@@ -6,14 +6,12 @@ use axum::{
 
 use axum_extra::extract::WithRejection;
 use monaxia_data::user::LocalUser;
+use monaxia_repository::repo::user::UserFind;
 use serde::Deserialize;
 
-use crate::{
-    repository::r#trait::user::UserFind,
-    web::{
-        error::{map_err_repository, ErrorResponse, ErrorType},
-        state::AppState,
-    },
+use crate::web::{
+    error::{map_err_repository, ErrorResponse, ErrorType},
+    state::AppState,
 };
 
 use super::reject::RjPath;

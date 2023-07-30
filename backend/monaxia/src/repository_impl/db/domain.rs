@@ -1,10 +1,9 @@
-use crate::repository::{
-    r#trait::{domain::DomainRepository, Repository},
-    RepoResult,
-};
-
 use async_trait::async_trait;
 use monaxia_db::domain::action::register_domain;
+use monaxia_repository::{
+    repo::{domain::DomainRepository, Repository},
+    RepoResult,
+};
 use sqlx::PgPool as Pool;
 
 pub struct DomainpositoryImpl(pub Pool);

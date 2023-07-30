@@ -1362,6 +1362,7 @@ dependencies = [
  "mime",
  "monaxia-data",
  "monaxia-db",
+ "monaxia-repository",
  "once_cell",
  "rand",
  "rsa",
@@ -1403,6 +1404,23 @@ dependencies = [
  "sea-query-binder",
  "sqlx",
  "time",
+]
+
+[[package]]
+name = "monaxia-job"
+version = "0.1.0"
+
+[[package]]
+name = "monaxia-repository"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "monaxia-data",
+ "sqlx",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
