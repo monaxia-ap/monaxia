@@ -24,7 +24,7 @@ pub trait QueueSend {
 
 /// Abstraction layer for queue receiving interface.
 #[async_trait]
-pub trait QueueRecerive {
+pub trait QueueReceive {
     /// Payload data type.
     type Data: DeserializeOwned + Send + Sync + 'static;
 

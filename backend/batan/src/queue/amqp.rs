@@ -1,4 +1,4 @@
-use crate::queue::{QueueRecerive, QueueSend};
+use crate::queue::{QueueReceive, QueueSend};
 
 use std::{marker::PhantomData, time::Duration};
 
@@ -220,7 +220,7 @@ where
 }
 
 #[async_trait]
-impl<T> QueueRecerive for AmqpReceiverQueue<T>
+impl<T> QueueReceive for AmqpReceiverQueue<T>
 where
     T: DeserializeOwned + Send + Sync + 'static,
 {
