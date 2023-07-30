@@ -4,8 +4,6 @@ mod jsonld;
 mod routes;
 pub mod state;
 
-use std::future::pending;
-
 use anyhow::Result;
 use axum::{
     http::{header::ACCEPT, Request},
@@ -69,7 +67,7 @@ async fn shutdown() {
     };
 
     #[cfg(not(unix))]
-    let terminate = pending::<()>();
+    let terminate = std::future::pending::<()>();
 
     select! {
         _ = ctrl_c => {},
