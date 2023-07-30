@@ -1,4 +1,4 @@
-use crate::web::state::AppState;
+use crate::repository_impl::construct_container_db;
 
 use std::{
     env::{current_dir, var as env_var, VarError},
@@ -8,6 +8,7 @@ use std::{
 
 use anyhow::{bail, Context, Result};
 use clap::Parser;
+use monaxia_data::config::Config;
 use monaxia_repository::Container;
 use once_cell::sync::Lazy;
 use time::{
@@ -33,10 +34,10 @@ pub enum MxCommand {
 }
 
 pub async fn execute_migrate_subcommand(
-    state: AppState,
+    config: Config,
     subcommand: MigrateSubcommand,
 ) -> Result<()> {
-    let container = state.container;
+    let container = construct_container_db(&config).await?;
 
     match subcommand.command {
         None => {

@@ -11,6 +11,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
+use monaxia_data::config::read_config;
 
 /// ActivityPub compatible microblogging platform.
 #[derive(Debug, Clone, Parser)]
@@ -47,12 +48,12 @@ pub enum Subcommand {
 }
 
 pub async fn execute_cli(args: Arguments) -> Result<()> {
-    let state = construct_state(&args.options.config).await?;
+    let config = read_config(&args.options.config).await?;
 
     match args.subcommand {
-        Subcommand::Serve => run_server(state).await?,
-        Subcommand::User(s) => execute_user_subcommand(state, s).await?,
-        Subcommand::Migrate(s) => execute_migrate_subcommand(state, s).await?,
+        Subcommand::Serve => run_server(config).await?,
+        Subcommand::User(s) => execute_user_subcommand(config, s).await?,
+        Subcommand::Migrate(s) => execute_migrate_subcommand(config, s).await?,
     }
     Ok(())
 }

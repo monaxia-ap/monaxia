@@ -10,12 +10,14 @@ use axum::{
     routing::{get, post},
     Router, Server,
 };
+use monaxia_data::config::Config;
 use tokio::{select, signal};
 use tower_http::trace::{OnRequest, TraceLayer};
 use tracing::{debug, info, Span};
 
-pub async fn run_server(state: state::AppState) -> Result<()> {
-    let bind_addr = state.config.server.bind;
+pub async fn run_server(config: Config) -> Result<()> {
+    let bind_addr = config.server.bind;
+    let state = state::construct_state(config).await?;
     let routes = construct_router(state);
 
     Server::bind(&bind_addr)

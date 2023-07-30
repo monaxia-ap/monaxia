@@ -1,9 +1,13 @@
-use crate::web::state::AppState;
+use crate::repository_impl::construct_container_db;
 
 use anyhow::{bail, Result};
 use clap::Parser;
 use inquire::{validator::Validation, Confirm, Text};
-use monaxia_data::user::{validate_username_format, LocalUserRegistration};
+use monaxia_data::{
+    config::Config,
+    user::{validate_username_format, LocalUserRegistration},
+};
+use monaxia_repository::Container;
 use rand::prelude::*;
 use rsa::{
     pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
@@ -18,16 +22,16 @@ pub enum UserSubcommand {
     Create,
 }
 
-pub async fn execute_user_subcommand(state: AppState, subcommand: UserSubcommand) -> Result<()> {
+pub async fn execute_user_subcommand(config: Config, subcommand: UserSubcommand) -> Result<()> {
+    let container = construct_container_db(&config).await?;
     match subcommand {
-        UserSubcommand::Create => create_user(state).await?,
+        UserSubcommand::Create => create_user(config, container).await?,
     }
 
     Ok(())
 }
 
-async fn create_user(state: AppState) -> Result<()> {
-    let (config, container) = (state.config, state.container);
+async fn create_user(config: Config, container: Container) -> Result<()> {
     let username_range = 1..=(config.user.username_max_length);
     let username = Text::new("Username:")
         .with_validator(move |n: &str| {

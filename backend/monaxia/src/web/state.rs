@@ -1,10 +1,9 @@
 use crate::repository_impl::construct_container_db;
 
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Result;
-use monaxia_data::config::{read_config, Config};
-use monaxia_db::establish_pool;
+use monaxia_data::config::Config;
 use monaxia_repository::Container;
 
 #[derive(Clone)]
@@ -13,11 +12,8 @@ pub struct AppState {
     pub container: Container,
 }
 
-pub async fn construct_state(config_filename: &Path) -> Result<AppState> {
-    let config = read_config(config_filename).await?;
-
-    let pool = establish_pool(&config.database.url).await?;
-    let container = construct_container_db(pool);
+pub async fn construct_state(config: Config) -> Result<AppState> {
+    let container = construct_container_db(&config).await?;
 
     Ok(AppState {
         config: Arc::new(config),
