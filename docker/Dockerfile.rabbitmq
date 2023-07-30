@@ -1,0 +1,5 @@
+FROM rabbitmq:3.12.1-management-alpine
+
+RUN wget -P /opt/rabbitmq/plugins https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.12.0/rabbitmq_delayed_message_exchange-3.12.0.ez \
+    && chown rabbitmq:rabbitmq /opt/rabbitmq/plugins/rabbitmq_delayed_message_exchange-3.12.0.ez \
+    && rabbitmq-plugins enable rabbitmq_delayed_message_exchange
