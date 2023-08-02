@@ -5,7 +5,7 @@ use self::{
     migrate::{execute_migrate_subcommand, MigrateSubcommand},
     user::{execute_user_subcommand, UserSubcommand},
 };
-use crate::web::{run_server, state::construct_state};
+use crate::web::run_server;
 
 use std::path::PathBuf;
 

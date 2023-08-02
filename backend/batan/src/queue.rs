@@ -3,31 +3,20 @@ pub mod amqp;
 use std::{error::Error as StdError, time::Duration};
 
 use async_trait::async_trait;
-use serde::{de::DeserializeOwned, Serialize};
 
 /// Abstraction layer for queue sending interface.
 #[async_trait]
-pub trait QueueSend {
-    /// Payload data type.
-    type Data: Serialize + Send + Sync + 'static;
-
+pub trait QueueSend<T> {
     /// Error type from backend.
     type Error: StdError + Send + Sync + 'static;
 
     /// Enqueues job payload with specified delay.
-    async fn enqueue(
-        &mut self,
-        data: Self::Data,
-        delay: Option<Duration>,
-    ) -> Result<(), Self::Error>;
+    async fn enqueue(&mut self, data: T, delay: Option<Duration>) -> Result<(), Self::Error>;
 }
 
 /// Abstraction layer for queue receiving interface.
 #[async_trait]
-pub trait QueueReceive {
-    /// Payload data type.
-    type Data: DeserializeOwned + Send + Sync + 'static;
-
+pub trait QueueReceive<T> {
     /// Payload acknowledge tag type.
     type Tag: Send + Sync + 'static;
 
@@ -35,7 +24,7 @@ pub trait QueueReceive {
     type Error: StdError + Send + Sync + 'static;
 
     /// Enqueues job payload with specified delay.
-    async fn dequeue(&mut self) -> Result<Option<(Self::Data, Self::Tag)>, Self::Error>;
+    async fn dequeue(&mut self) -> Result<Option<(T, Self::Tag)>, Self::Error>;
 
     /// Marks a job as resolved.
     async fn resolve(&mut self, tag: Self::Tag) -> Result<(), Self::Error>;

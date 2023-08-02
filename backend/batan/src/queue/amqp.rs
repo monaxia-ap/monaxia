@@ -150,11 +150,10 @@ where
 }
 
 #[async_trait]
-impl<T> QueueSend for AmqpSenderQueue<T>
+impl<T> QueueSend<T> for AmqpSenderQueue<T>
 where
     T: Serialize + Send + Sync + 'static,
 {
-    type Data = T;
     type Error = AmqpQueueError;
 
     async fn enqueue(&mut self, data: T, delay: Option<Duration>) -> Result<(), AmqpQueueError> {
@@ -220,11 +219,10 @@ where
 }
 
 #[async_trait]
-impl<T> QueueReceive for AmqpReceiverQueue<T>
+impl<T> QueueReceive<T> for AmqpReceiverQueue<T>
 where
     T: DeserializeOwned + Send + Sync + 'static,
 {
-    type Data = T;
     type Tag = Acker;
     type Error = AmqpQueueError;
 
