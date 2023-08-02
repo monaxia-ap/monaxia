@@ -11,5 +11,5 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 
-batan = { workspace = true }
 monaxia-data = { workspace = true }
+monaxia-queue = { workspace = true }

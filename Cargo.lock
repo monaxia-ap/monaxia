@@ -389,20 +389,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
-name = "batan"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bincode",
- "futures",
- "lapin",
- "once_cell",
- "serde",
- "thiserror",
- "tracing",
-]
-
-[[package]]
 name = "bincode"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1203,9 +1189,9 @@ dependencies = [
 
 [[package]]
 name = "lapin"
-version = "2.1.1"
+version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd03ea5831b44775e296239a64851e2fd14a80a363d202ba147009ffc994ff0f"
+checksum = "5f3067a1fcfbc3fc46455809c023e69b8f6602463201010f4ae5a3b572adb9dc"
 dependencies = [
  "amq-protocol",
  "async-global-executor-trait",
@@ -1411,8 +1397,22 @@ name = "monaxia-job"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "batan",
  "monaxia-data",
+ "monaxia-queue",
+ "serde",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "monaxia-queue"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bincode",
+ "futures",
+ "lapin",
+ "once_cell",
  "serde",
  "thiserror",
  "tracing",
