@@ -1,8 +1,11 @@
 use super::{
-    Error, Result, AMQP_PERSISTENT_DELIVERY_MODE, AMQP_X_DELAY, AMQP_X_DELAYED_MESSAGE,
-    AMQP_X_DELAYED_TYPE, DEFAULT_EXCHANGE_NAME, DELAYED_EXCHANGE_NAME,
+    AMQP_PERSISTENT_DELIVERY_MODE, AMQP_X_DELAY, AMQP_X_DELAYED_MESSAGE, AMQP_X_DELAYED_TYPE,
+    DEFAULT_EXCHANGE_NAME, DELAYED_EXCHANGE_NAME,
 };
-use crate::SendQueue;
+use crate::{
+    error::{Error, Result},
+    SendQueue,
+};
 
 use std::{fmt::Debug, marker::PhantomData, time::Duration};
 
@@ -45,7 +48,7 @@ where
     async fn publish(&self, data: T) -> Result<()> {
         // job is persistent
         let props = BasicProperties::default().with_delivery_mode(AMQP_PERSISTENT_DELIVERY_MODE);
-        let payload = bincode::serialize(&data)?;
+        let payload = bincode::serialize(&data).map_err(|e| Error::Serialization(e.into()))?;
 
         let confirm = self
             .channel
@@ -56,8 +59,9 @@ where
                 &payload,
                 props,
             )
-            .await?;
-        confirm.await?;
+            .await
+            .map_err(|e| Error::Queue(e.into()))?;
+        confirm.await.map_err(|e| Error::Delivery(e.into()))?;
 
         Ok(())
     }
@@ -74,7 +78,7 @@ where
         let props = BasicProperties::default()
             .with_delivery_mode(AMQP_PERSISTENT_DELIVERY_MODE)
             .with_headers(headers);
-        let payload = bincode::serialize(&data)?;
+        let payload = bincode::serialize(&data).map_err(|e| Error::Serialization(e.into()))?;
 
         let confirm = self
             .channel
@@ -85,8 +89,9 @@ where
                 &payload,
                 props,
             )
-            .await?;
-        confirm.await?;
+            .await
+            .map_err(|e| Error::Queue(e.into()))?;
+        confirm.await.map_err(|e| Error::Delivery(e.into()))?;
 
         Ok(())
     }
@@ -97,8 +102,6 @@ impl<T> SendQueue<T> for SenderQueue<T>
 where
     T: Debug + Serialize + Send + Sync + 'static,
 {
-    type Error = Error;
-
     async fn enqueue(&self, data: T, delay: Option<Duration>) -> Result<()> {
         if let Some(delay) = delay {
             self.publish_delayed(data, delay).await?;
@@ -132,11 +135,13 @@ async fn initialize_channel(channel: &Channel) -> Result<()> {
             },
             arguments,
         )
-        .await?;
+        .await
+        .map_err(|e| Error::Queue(e.into()))?;
 
     // enable message confirmation
     channel
         .confirm_select(ConfirmSelectOptions::default())
-        .await?;
+        .await
+        .map_err(|e| Error::Queue(e.into()))?;
     Ok(())
 }

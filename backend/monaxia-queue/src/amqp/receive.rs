@@ -1,5 +1,7 @@
-use super::{Error, Result};
-use crate::{JobTag, ReceiveQueue};
+use crate::{
+    error::{Error, Result},
+    BoxedTag, ProcessTag, ReceiveQueue,
+};
 
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -42,7 +44,8 @@ where
                 BasicConsumeOptions::default(),
                 FieldTable::default(),
             )
-            .await?;
+            .await
+            .map_err(|e| Error::Queue(e.into()))?;
 
         Ok(ReceiverQueue {
             _channel: channel,
@@ -58,12 +61,13 @@ where
         let delivery = {
             let mut locked = self.consumer.lock().await;
             match locked.next().await {
-                Some(d) => d?,
+                Some(d) => d.map_err(|e| Error::Queue(e.into()))?,
                 None => return Ok(None),
             }
         };
 
-        let payload = bincode::deserialize(&delivery.data)?;
+        let payload =
+            bincode::deserialize(&delivery.data).map_err(|e| Error::Serialization(e.into()))?;
         let tag = Tag(delivery.acker);
         Ok(Some((payload, tag)))
     }
@@ -74,12 +78,11 @@ impl<T> ReceiveQueue<T> for ReceiverQueue<T>
 where
     T: Debug + DeserializeOwned + Send + Sync + 'static,
 {
-    type Error = Error;
-    type Tag = Tag;
-
-    async fn dequeue(&self) -> Result<Option<(T, Self::Tag)>> {
-        let job = self.consume_one().await?;
-        Ok(job)
+    async fn dequeue(&self) -> Result<Option<(T, BoxedTag)>> {
+        let Some((payload, tag)) = self.consume_one().await? else {
+            return Ok(None);
+        };
+        Ok(Some((payload, Box::new(tag))))
     }
 }
 
@@ -87,11 +90,12 @@ where
 pub struct Tag(Acker);
 
 #[async_trait]
-impl JobTag for Tag {
-    type Error = Error;
-
+impl ProcessTag for Tag {
     async fn resolve(self) -> Result<()> {
-        self.0.ack(BasicAckOptions::default()).await?;
+        self.0
+            .ack(BasicAckOptions::default())
+            .await
+            .map_err(|e| Error::Delivery(e.into()))?;
         Ok(())
     }
 
@@ -101,7 +105,8 @@ impl JobTag for Tag {
                 requeue: false,
                 ..Default::default()
             })
-            .await?;
+            .await
+            .map_err(|e| Error::Delivery(e.into()))?;
         Ok(())
     }
 }
