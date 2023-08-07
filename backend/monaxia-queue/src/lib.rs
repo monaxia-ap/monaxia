@@ -15,9 +15,15 @@ pub trait SendQueue<T> {
 #[async_trait]
 pub trait ReceiveQueue<T> {
     type Error: Send + Sync + StdError + 'static;
-    type Tag: Send + Sync + 'static;
+    type Tag: JobTag;
 
-    async fn dequeue(&self) -> Result<(T, Self::Tag), Self::Error>;
-    async fn resolve(&self, tag: Self::Tag) -> Result<(), Self::Error>;
-    async fn reject(&self, tag: Self::Tag) -> Result<(), Self::Error>;
+    async fn dequeue(&self) -> Result<Option<(T, Self::Tag)>, Self::Error>;
+}
+
+#[async_trait]
+pub trait JobTag: Send + Sync + 'static {
+    type Error: Send + Sync + StdError + 'static;
+
+    async fn resolve(self) -> Result<(), Self::Error>;
+    async fn reject(self) -> Result<(), Self::Error>;
 }

@@ -14,7 +14,7 @@ const AMQP_X_DELAY: &str = "x-delay";
 const AMQP_X_DELAYED_TYPE: &str = "x-delayed-type";
 const AMQP_X_DELAYED_MESSAGE: &str = "x-delayed-message";
 const DEFAULT_EXCHANGE_NAME: &str = "";
-const DELAYED_EXCHANGE_NAME: &str = "batan-delayed-exchange";
+const DELAYED_EXCHANGE_NAME: &str = "monaxia-delayed-exchange";
 
 pub type Result<T> = StdResult<T, Error>;
 
