@@ -2,17 +2,20 @@
 
 **Monaxia** (μοναξιά, *solitude* in Greek) is an experimental project implementing ActivityPub compatible microblog platform.
 
-## Modules
-
-### Monaxia - Main Application
+## Modules - Backend
 *TBW*
 
-### Yokya - Web Frontend
-It may be written with Svelte...
+### monaxia
 
+### monaxia-data
+
+### monaxia-job
+
+### monaxia-queue
+
+### monaxia-db
+
+### monaxia-repository
+
+## Modules - Frontend
 *TBW*
-
-### Batan - Job Queue
-**Batan** provides backend agnostic job queueing system.
-
-The module name comes from *ばたんきゅ～*.
