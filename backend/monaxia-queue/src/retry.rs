@@ -3,7 +3,7 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 
 /// Represents a set of value for backoff strategy.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub enum Backoff {
     /// Constant backoff.
     Constant(Duration),
@@ -28,18 +28,18 @@ impl Backoff {
 }
 
 /// Retry information.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Retry {
     current: usize,
-    max: usize,
+    max_retry: usize,
     backoff: Backoff,
 }
 
 impl Retry {
-    pub fn new(max: usize, backoff: Backoff) -> Retry {
+    pub fn new(max_retry: usize, backoff: Backoff) -> Retry {
         Retry {
             current: 0,
-            max,
+            max_retry,
             backoff,
         }
     }
@@ -50,8 +50,8 @@ impl Retry {
     }
 
     /// Max retry count.
-    pub fn max(&self) -> usize {
-        self.max
+    pub fn max_retry(&self) -> usize {
+        self.max_retry
     }
 
     /// Backoff strategy for the retry.
@@ -64,7 +64,7 @@ impl Retry {
     /// Otherwise will be pair of next delay duration and `Retry`.
     pub fn retry(mut self) -> Option<(Duration, Retry)> {
         self.current += 1;
-        if self.current > self.max {
+        if self.current > self.max_retry {
             None
         } else {
             let duration = self.backoff.delay_of(self.current - 1);

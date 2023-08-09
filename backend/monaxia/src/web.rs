@@ -11,6 +11,7 @@ use axum::{
     Router, Server,
 };
 use monaxia_data::config::Config;
+use monaxia_job::job::{Job, MxJob};
 use tokio::{select, signal};
 use tower_http::trace::{OnRequest, TraceLayer};
 use tracing::{debug, info, Span};
@@ -24,13 +25,17 @@ pub async fn run_server(config: Config) -> Result<()> {
 
     // start web server
     let bind_addr = config.server.bind;
-    let state = state::construct_state(config, producer).await?;
+    let state = state::construct_state(config, producer.clone()).await?;
     let routes = construct_router(state);
 
-    Server::bind(&bind_addr)
+    let server = Server::bind(&bind_addr)
         .serve(routes.into_make_service())
-        .with_graceful_shutdown(shutdown())
+        .with_graceful_shutdown(shutdown());
+
+    producer
+        .enqueue(MxJob::new_single(Job::Hello), None)
         .await?;
+    server.await?;
     Ok(())
 }
 
