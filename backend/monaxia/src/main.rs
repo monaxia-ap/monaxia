@@ -2,6 +2,7 @@ mod cli;
 mod constant;
 mod repository_impl;
 mod web;
+mod worker;
 
 use anyhow::Result;
 use clap::Parser;

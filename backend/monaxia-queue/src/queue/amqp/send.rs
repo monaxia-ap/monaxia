@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     error::{Error, Result},
-    SendQueue,
+    queue::SendQueue,
 };
 
 use std::{fmt::Debug, marker::PhantomData, time::Duration};
@@ -19,6 +19,7 @@ use serde::Serialize;
 use tracing::instrument;
 
 /// Sender queue that uses AMQP client.
+#[derive(Debug)]
 pub struct SenderQueue<T> {
     _payload_type: PhantomData<fn() -> T>,
     channel: Channel,

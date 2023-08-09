@@ -15,9 +15,15 @@ use tokio::{select, signal};
 use tower_http::trace::{OnRequest, TraceLayer};
 use tracing::{debug, info, Span};
 
+use crate::worker::create_queues;
+
 pub async fn run_server(config: Config) -> Result<()> {
+    // start workers
+    let (producer, consumer) = create_queues(&config).await?;
+
+    // start web server
     let bind_addr = config.server.bind;
-    let state = state::construct_state(config).await?;
+    let state = state::construct_state(config, producer).await?;
     let routes = construct_router(state);
 
     Server::bind(&bind_addr)

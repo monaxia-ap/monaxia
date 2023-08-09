@@ -7,6 +7,10 @@ domain = "your-domain.tld"
 [database]
 url = "postgres://monaxia:einsamkeit@postgres:5432/monaxia"
 
+[queue]
+url = "amqp://rabbitmq:5672/monaxia"
+workers = 4
+
 [user]
 registration = "closed"
 username_max_length = 32

@@ -6,6 +6,8 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
+futures = { workspace = true }
+lapin = { workspace = true }
 once_cell = { workspace = true }
 rsa = { workspace = true }
 serde = { workspace = true }
@@ -29,4 +31,6 @@ tower-http = { version = "0.4.3", features = ["trace"] }
 
 monaxia-data = { workspace = true }
 monaxia-db = { workspace = true }
+monaxia-job = { workspace = true }
 monaxia-repository = { workspace = true }
+monaxia-queue = { workspace = true }

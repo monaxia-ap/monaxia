@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, Result},
-    BoxedTag, ProcessTag, ReceiveQueue,
+    queue::{BoxedTag, ProcessTag, ReceiveQueue},
 };
 
 use std::{fmt::Debug, marker::PhantomData};
