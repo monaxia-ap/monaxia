@@ -21,6 +21,6 @@ pub trait ReceiveQueue<T>: Debug + Send + Sync + 'static {
 
 #[async_trait]
 pub trait ProcessTag: Send + Sync + 'static {
-    async fn resolve(self) -> Result<()>;
-    async fn reject(self) -> Result<()>;
+    async fn resolve(self: Box<Self>) -> Result<()>;
+    async fn reject(self: Box<Self>) -> Result<()>;
 }

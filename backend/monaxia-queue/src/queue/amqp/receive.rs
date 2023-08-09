@@ -91,7 +91,7 @@ pub struct Tag(Acker);
 
 #[async_trait]
 impl ProcessTag for Tag {
-    async fn resolve(self) -> Result<()> {
+    async fn resolve(self: Box<Self>) -> Result<()> {
         self.0
             .ack(BasicAckOptions::default())
             .await
@@ -99,7 +99,7 @@ impl ProcessTag for Tag {
         Ok(())
     }
 
-    async fn reject(self) -> Result<()> {
+    async fn reject(self: Box<Self>) -> Result<()> {
         self.0
             .nack(BasicNackOptions {
                 requeue: false,

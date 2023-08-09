@@ -51,11 +51,11 @@ pub struct EmptyTag;
 
 #[async_trait]
 impl ProcessTag for EmptyTag {
-    async fn resolve(self) -> Result<()> {
+    async fn resolve(self: Box<Self>) -> Result<()> {
         Ok(())
     }
 
-    async fn reject(self) -> Result<()> {
+    async fn reject(self: Box<Self>) -> Result<()> {
         Ok(())
     }
 }

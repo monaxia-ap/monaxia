@@ -27,16 +27,9 @@ pub async fn construct_state(config: Config, producer: Producer<MxJob>) -> Resul
 
 #[cfg(test)]
 pub fn construct_state_test() -> AppState {
-    use crate::repository_impl::construct_container_test;
-    use futures::channel::mpsc::channel;
-    use monaxia_queue::queue::memory::{create_memory_consumer, create_memory_producer};
+    use crate::{repository_impl::construct_container_test, worker::create_test_queues};
 
-    let (producer, container) = {
-        let (sender, receiver) = channel(8);
-        let producer = create_memory_producer(sender.clone());
-        let consumer = create_memory_consumer(sender, receiver);
-        (producer, consumer)
-    };
+    let (producer, _) = create_test_queues();
     let config = Default::default();
     let container = construct_container_test();
 
