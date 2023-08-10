@@ -12,6 +12,7 @@ use std::{fmt::Debug, sync::Arc};
 
 use lapin::Connection;
 use serde::{de::DeserializeOwned, Serialize};
+use tracing::debug;
 
 const AMQP_PERSISTENT_DELIVERY_MODE: u8 = 2;
 const AMQP_X_DELAY: &str = "x-delay";
@@ -66,6 +67,7 @@ where
         .create_channel()
         .await
         .map_err(|e| Error::Queue(e.into()))?;
+    debug!("AMQP channel for sender queue created");
     let worker_name = format!("{}-{worker_suffix}", WORKER_NAME_BASE);
     let sender = SenderQueue::new(channel, QUEUE_NAME_BASE, worker_name).await?;
 
@@ -83,6 +85,7 @@ where
         .create_channel()
         .await
         .map_err(|e| Error::Queue(e.into()))?;
+    debug!("AMQP channel for receiver queue created");
     let worker_name = format!("{}-{worker_suffix}", WORKER_NAME_BASE);
     let receiver = ReceiverQueue::new(channel, QUEUE_NAME_BASE, worker_name).await?;
 

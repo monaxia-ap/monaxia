@@ -11,7 +11,9 @@ use std::{fmt::Debug, marker::PhantomData, time::Duration};
 
 use async_trait::async_trait;
 use lapin::{
-    options::{BasicPublishOptions, ConfirmSelectOptions, ExchangeDeclareOptions},
+    options::{
+        BasicPublishOptions, ConfirmSelectOptions, ExchangeDeclareOptions, QueueDeclareOptions,
+    },
     types::{AMQPValue, FieldTable},
     BasicProperties, Channel, ExchangeKind,
 };
@@ -36,11 +38,13 @@ where
         queue_name: impl Into<String>,
         worker_name: impl Into<String>,
     ) -> Result<SenderQueue<T>> {
-        initialize_channel(&channel).await?;
+        let queue_name = queue_name.into();
+        let worker_name = worker_name.into();
+        initialize_channel(&channel, &queue_name).await?;
         Ok(SenderQueue {
             channel,
-            worker_name: worker_name.into(),
-            queue_name: queue_name.into(),
+            worker_name,
+            queue_name,
             _payload_type: Default::default(),
         })
     }
@@ -113,7 +117,7 @@ where
     }
 }
 
-async fn initialize_channel(channel: &Channel) -> Result<()> {
+async fn initialize_channel(channel: &Channel, queue_name: &str) -> Result<()> {
     // declare durable exchange for delayed messages
     let arguments = {
         let mut ft = FieldTable::default();
@@ -121,7 +125,7 @@ async fn initialize_channel(channel: &Channel) -> Result<()> {
         // but kind() is not accessible.
         ft.insert(
             AMQP_X_DELAYED_TYPE.into(),
-            AMQPValue::ShortString("direct".into()),
+            AMQPValue::LongString("direct".into()),
         );
         ft
     };
@@ -135,6 +139,20 @@ async fn initialize_channel(channel: &Channel) -> Result<()> {
                 ..Default::default()
             },
             arguments,
+        )
+        .await
+        .map_err(|e| Error::Queue(e.into()))?;
+
+    // declare queue
+    channel
+        .queue_declare(
+            queue_name,
+            QueueDeclareOptions {
+                durable: true,
+                auto_delete: false,
+                ..Default::default()
+            },
+            FieldTable::default(),
         )
         .await
         .map_err(|e| Error::Queue(e.into()))?;
