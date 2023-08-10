@@ -1,9 +1,10 @@
 use anyhow::Result;
 use monaxia_job::job::{Job, MxJob};
 use monaxia_queue::job::Consumer;
-use tracing::{error, info};
+use tracing::{error, info, instrument};
 
-pub async fn worker(consumer: Consumer<MxJob>) -> Result<()> {
+#[instrument(skip(consumer))]
+pub async fn worker(worker: usize, consumer: Consumer<MxJob>) -> Result<()> {
     // TODO: just loop
     while let Some((job, tag)) = consumer.fetch().await? {
         match do_job(job.job().clone(), job.tag().to_string()).await {
@@ -23,6 +24,7 @@ pub async fn worker(consumer: Consumer<MxJob>) -> Result<()> {
     Ok(())
 }
 
+#[instrument(skip(_tag))]
 async fn do_job(job: Job, _tag: String) -> Result<()> {
     match job {
         Job::Hello => {

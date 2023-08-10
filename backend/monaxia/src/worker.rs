@@ -14,8 +14,8 @@ use tracing::info;
 pub async fn spawn_workers(consumers: Vec<Consumer<MxJob>>) {
     info!("spawning {} workers", consumers.len());
 
-    for consumer in consumers {
-        spawn(root::worker(consumer));
+    for (i, consumer) in consumers.into_iter().enumerate() {
+        spawn(root::worker(i, consumer));
     }
 }
 
