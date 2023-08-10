@@ -17,7 +17,6 @@ use axum::{
 };
 use mime::{Mime, APPLICATION_JSON, TEXT_HTML};
 use serde::{de::DeserializeOwned, Serialize};
-use tracing::info;
 
 /// Accept header type.
 #[derive(Debug, Clone, Copy)]

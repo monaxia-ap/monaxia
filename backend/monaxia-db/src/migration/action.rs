@@ -42,9 +42,7 @@ pub async fn ensure_migrations_table(conn: &mut Connection) -> SqlxResult<()> {
     Ok(())
 }
 
-pub async fn fetch_last_migration(
-    conn: &mut Connection,
-) -> SqlxResult<Option<Migration>> {
+pub async fn fetch_last_migration(conn: &mut Connection) -> SqlxResult<Option<Migration>> {
     let (query, values) = Query::select()
         .columns([
             MigrationDef::Id,

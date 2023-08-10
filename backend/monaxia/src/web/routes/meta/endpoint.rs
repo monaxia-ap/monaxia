@@ -5,7 +5,6 @@ use super::schema::{
 };
 use crate::{
     constant::{SOFTWARE_NAME, VERSION},
-    repository::r#trait::user::UserFind,
     web::{
         error::{bail_other, map_err_generic, map_err_repository, MxResult},
         extract::RjQuery,
@@ -21,6 +20,7 @@ use axum::{
 };
 use axum_extra::extract::WithRejection;
 use monaxia_data::{ap::Acct, config::UserRegistration};
+use monaxia_repository::repo::user::UserFind;
 
 pub async fn host_meta(State(state): State<AppState>) -> MxResult<Response<String>> {
     let server_base_url = state.config.cached.server_base_url();

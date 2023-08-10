@@ -3,7 +3,7 @@ version: "3.8"
 services:
   monaxia:
     build:
-      dockerfile: "./docker/Dockerfile"
+      dockerfile: "./docker/Dockerfile.monaxia"
       context: "./"
     restart: "always"
     depends_on:
@@ -26,9 +26,27 @@ services:
     expose:
       - 5432
     healthcheck:
-      test: ["redis-cli", "ping"]
-      interval: "5s"
-      retries: 20
+      test: "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
+      interval: "3s"
+      retries: 10
+
+  rabbitmq:
+    hostname: "rabbitmq"
+    build:
+      dockerfile: "./docker/Dockerfile.rabbitmq"
+      context: "./"
+    env_file:
+      - "./.env"
+    volumes:
+      - "./data/rabbitmq:/var/lib/rabbitmq"
+    expose:
+      - 5672
+    ports:
+      - "15672:15672"
+    healthcheck:
+      test: "rabbitmq-diagnostics -q ping"
+      interval: "3s"
+      retries: 10
 
   redis:
     image: "redis:7-alpine"
@@ -39,6 +57,6 @@ services:
     expose:
       - 6379
     healthcheck:
-      test: ["pg_isready", "-U", "$$POSTGRES_USER", "-d", "$$POSTGRES_DB"]
-      interval: "5s"
-      retries: 20
+      test: "redis-cli ping"
+      interval: "3s"
+      retries: 10

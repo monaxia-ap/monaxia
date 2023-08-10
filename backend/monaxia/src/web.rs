@@ -4,15 +4,42 @@ mod jsonld;
 mod routes;
 pub mod state;
 
+use anyhow::Result;
 use axum::{
     http::{header::ACCEPT, Request},
     routing::{get, post},
-    Router,
+    Router, Server,
 };
+use monaxia_data::config::Config;
+use monaxia_job::job::{Job, MxJob};
+use tokio::{select, signal};
 use tower_http::trace::{OnRequest, TraceLayer};
-use tracing::{debug, Span};
+use tracing::{debug, info, Span};
 
-pub fn construct_router(state_source: state::AppState) -> Router<()> {
+use crate::worker::{create_queues, spawn_workers};
+
+pub async fn run_server(config: Config) -> Result<()> {
+    // start workers
+    let (producer, consumers) = create_queues(&config).await?;
+    spawn_workers(consumers).await;
+
+    // start web server
+    let bind_addr = config.server.bind;
+    let state = state::construct_state(config, producer.clone()).await?;
+    let routes = construct_router(state);
+
+    let server = Server::bind(&bind_addr)
+        .serve(routes.into_make_service())
+        .with_graceful_shutdown(shutdown());
+
+    producer
+        .enqueue(MxJob::new_single(Job::Hello), None)
+        .await?;
+    server.await?;
+    Ok(())
+}
+
+fn construct_router(state_source: state::AppState) -> Router<()> {
     // routes
     let meta_router = Router::new()
         .route("/host-meta", get(routes::meta::host_meta))
@@ -38,6 +65,30 @@ pub fn construct_router(state_source: state::AppState) -> Router<()> {
         .nest("/users", users_router)
         .with_state(state_source)
         .layer(trace_layer)
+}
+
+async fn shutdown() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("cannot hook Ctrl-C");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("cannot hook SIGTERM")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    info!("shutting down web server");
 }
 
 #[derive(Debug, Clone)]

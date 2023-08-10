@@ -14,6 +14,9 @@ pub struct Config {
     /// \[database\] block.
     pub database: ConfigDatabase,
 
+    /// \[queue\] block.
+    pub queue: ConfigQueue,
+
     /// \[user\] block.
     pub user: ConfigUser,
 
@@ -27,6 +30,7 @@ impl Default for Config {
         let mut config = Self {
             server: Default::default(),
             database: Default::default(),
+            queue: Default::default(),
             user: Default::default(),
             cached: Default::default(),
         };
@@ -80,6 +84,25 @@ impl Default for ConfigDatabase {
     fn default() -> Self {
         Self {
             url: "postgres://localhost:5432/monaxia".into(),
+        }
+    }
+}
+
+/// Data configurations.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfigQueue {
+    /// Database connection URL.
+    pub url: String,
+
+    /// Workers count to create.
+    pub workers: usize,
+}
+
+impl Default for ConfigQueue {
+    fn default() -> Self {
+        Self {
+            url: "amqp://localhost:5672/monaxia".into(),
+            workers: 4,
         }
     }
 }
