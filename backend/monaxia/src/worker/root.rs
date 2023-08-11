@@ -31,7 +31,7 @@ pub async fn worker(state: WorkerState) -> Result<()> {
 }
 
 #[instrument(
-    skip(state, _tag),
+    skip(state, payload, _tag),
     fields(job = to_variant_name(&payload).expect("invalid job"))
 )]
 async fn do_job(state: JobState, payload: Job, _tag: String) -> Result<()> {

@@ -10,6 +10,7 @@ use crate::web::{
 use axum::{extract::State, http::StatusCode};
 use monaxia_data::ap::RequestValidation;
 use monaxia_job::job::{Job, MxJob};
+use serde_variant::to_variant_name;
 use tracing::{debug, instrument};
 
 pub async fn actor(
@@ -65,13 +66,12 @@ pub async fn inbox(
         signature_header: ap_validation.signature_header,
         header_values: ap_validation.header_values,
     };
+    let job = Job::ActivityPreprocess(ap_json, validation);
 
+    debug!("enqueuing {}", to_variant_name(&job).expect("invalid job"));
     state
         .producer
-        .enqueue(
-            MxJob::new_single(Job::ActivityPreprocess(ap_json, validation)),
-            None,
-        )
+        .enqueue(MxJob::new_single(job), None)
         .await
         .map_err(map_err_queue)?;
 
