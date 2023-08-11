@@ -29,7 +29,7 @@ USER monaxia
 WORKDIR /monaxia
 
 COPY --from=backend-builder /usr/local/cargo/bin/monaxia /monaxia/monaxia
-COPY --from=backend-builder /usr/src/monaxia/migrations /monaxia/migrations
+COPY --from=backend-builder /usr/src/monaxia/backend/migrations /monaxia/migrations
 COPY --from=frontend-builder /usr/src/monaxia/.dockerignore /monaxia/.dockerignore
 
 CMD ["/monaxia/monaxia", "serve"]
