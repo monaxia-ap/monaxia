@@ -16,7 +16,7 @@ use axum::{
     BoxError, Json,
 };
 use mime::{Mime, APPLICATION_JSON, TEXT_HTML};
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 
 /// Accept header type.
 #[derive(Debug, Clone, Copy)]
@@ -72,12 +72,11 @@ where
 
 #[derive(Debug, Clone)]
 #[must_use]
-pub struct ApJson<T>(pub T);
+pub struct ApJsonText(pub String);
 
 #[async_trait]
-impl<T, S, B> FromRequest<S, B> for ApJson<T>
+impl<S, B> FromRequest<S, B> for ApJsonText
 where
-    T: DeserializeOwned,
     B: HttpBody + Send + 'static,
     B::Data: Send,
     B::Error: Into<BoxError>,
@@ -87,9 +86,9 @@ where
 
     async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
         if ap_json_content_type(req.headers()) {
-            let inner = Json::<T>::from_request(req, state).await;
+            let inner = String::from_request(req, state).await;
             match inner {
-                Ok(Json(d)) => Ok(ApJson(d)),
+                Ok(s) => Ok(ApJsonText(s)),
                 Err(r) => Err(ErrorResponse {
                     status_code: r.status(),
                     error: ErrorType::InvalidRequest,
@@ -105,6 +104,10 @@ where
         }
     }
 }
+
+#[derive(Debug, Clone)]
+#[must_use]
+pub struct ApJson<T>(pub T);
 
 impl<T> IntoResponse for ApJson<T>
 where

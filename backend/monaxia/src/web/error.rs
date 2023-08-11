@@ -22,6 +22,9 @@ pub enum ErrorType {
     /// Something not found.
     NotFound,
 
+    /// Queue process failed.
+    QueueFailed,
+
     /// Other error.
     OtherError,
 }
@@ -53,6 +56,14 @@ pub fn map_err_generic<E: StdError>(err: E, status_code: StatusCode) -> ErrorRes
     ErrorResponse {
         status_code,
         error: ErrorType::OtherError,
+        reason: err.to_string(),
+    }
+}
+
+pub fn map_err_queue(err: impl StdError) -> ErrorResponse {
+    ErrorResponse {
+        status_code: StatusCode::INTERNAL_SERVER_ERROR,
+        error: ErrorType::QueueFailed,
         reason: err.to_string(),
     }
 }

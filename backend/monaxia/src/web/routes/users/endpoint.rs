@@ -1,13 +1,14 @@
 use super::schema::{ResponsePerson, ResponsePersonPublicKey};
 
 use crate::web::{
-    error::MxResult,
-    extract::{ApJson, MustAcceptActivityJson, PathLocalUser},
+    error::{map_err_queue, MxResult},
+    extract::{ApJsonText, MustAcceptActivityJson, PathLocalUser, ApJson},
     jsonld::JSONLD_OBJECT,
     state::AppState,
 };
 
 use axum::{extract::State, http::StatusCode};
+use monaxia_job::job::{Job, MxJob};
 use serde_json::Value as JsonValue;
 use tracing::{debug, instrument};
 
@@ -47,21 +48,31 @@ pub async fn actor(
     }))
 }
 
-#[instrument(skip(_state, ap_json), fields(local_user = local_user.username))]
+#[instrument(skip(state, ap_json), fields(local_user = local_user.username))]
 pub async fn inbox(
-    State(_state): State<AppState>,
-    // _: MustAcceptActivityJson,
+    State(state): State<AppState>,
     PathLocalUser(local_user): PathLocalUser,
-    ApJson(ap_json): ApJson<JsonValue>,
+    ApJsonText(ap_json): ApJsonText,
 ) -> MxResult<(StatusCode, String)> {
-    debug!("{ap_json:?}");
+    /*
+    let headers =
+    state
+        .producer
+        .enqueue(
+            MxJob::new_single(Job::ActivityPreprocess(ap_json, ())),
+            None,
+        )
+        .await
+        .map_err(map_err_queue);
+    */
+
     Ok((StatusCode::NOT_IMPLEMENTED, "not implemented yet".into()))
 }
 
 #[instrument(skip(_state), fields(local_user = local_user.username))]
 pub async fn outbox(
     State(_state): State<AppState>,
-    // _: MustAcceptActivityJson,
+    _: MustAcceptActivityJson,
     PathLocalUser(local_user): PathLocalUser,
 ) -> MxResult<(StatusCode, String)> {
     Ok((StatusCode::NOT_IMPLEMENTED, "not implemented yet".into()))
