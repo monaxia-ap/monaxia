@@ -45,6 +45,12 @@ pub struct LocalUser {
     pub public_key: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct RemoteUser {}
+
+#[derive(Debug, Clone)]
+pub struct UserPublicKey {}
+
 /// Validates username format.
 pub fn validate_username_format(
     input: &str,

@@ -1,9 +1,9 @@
-use super::{JobState, WorkerState};
+use super::{ap, JobState, WorkerState};
 
 use anyhow::Result;
 use monaxia_job::job::Job;
 use serde_variant::to_variant_name;
-use tracing::{debug, error, info, instrument};
+use tracing::{error, info, instrument};
 
 #[instrument(skip(state), fields(worker = state.name))]
 pub async fn worker(state: WorkerState) -> Result<()> {
@@ -40,10 +40,7 @@ async fn do_job(state: JobState, payload: Job, _tag: String) -> Result<()> {
             info!("hello monaxia!");
         }
         Job::ActivityPreprocess(json_text, validation) => {
-            debug!(
-                "validating signature with headers: {:?}",
-                validation.signature_header.headers
-            );
+            ap::validate_request(state, json_text, validation).await?;
         }
     }
 
