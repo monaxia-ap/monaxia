@@ -1,21 +1,26 @@
+use super::{JobState, WorkerState};
+
 use anyhow::Result;
-use monaxia_job::job::{Job, MxJob};
-use monaxia_queue::job::Consumer;
+use monaxia_job::job::Job;
 use tracing::{error, info, instrument};
 
-#[instrument(skip(consumer))]
-pub async fn worker(worker: usize, consumer: Consumer<MxJob>) -> Result<()> {
+#[instrument(skip(state), fields(worker = state.name))]
+pub async fn worker(state: WorkerState) -> Result<()> {
     // TODO: just loop
-    while let Some((job, tag)) = consumer.fetch().await? {
-        match do_job(job.job().clone(), job.tag().to_string()).await {
+    while let Some((job, delivery)) = state.consumer.fetch().await? {
+        let job_state = state.job_state.clone();
+        let job_payload = job.job().clone();
+        let job_tag = job.tag().to_string();
+
+        match do_job(job_state, job_payload, job_tag).await {
             Ok(()) => {
-                consumer.mark_success(tag).await?;
+                state.consumer.mark_success(delivery).await?;
             }
             Err(e) => {
                 error!("job error: {e}");
-                consumer.mark_failure(tag).await?;
+                state.consumer.mark_failure(delivery).await?;
                 if let Some((data, delay)) = job.next() {
-                    consumer.enqueue(data, Some(delay)).await?;
+                    state.consumer.enqueue(data, Some(delay)).await?;
                 }
             }
         }
@@ -24,9 +29,9 @@ pub async fn worker(worker: usize, consumer: Consumer<MxJob>) -> Result<()> {
     Ok(())
 }
 
-#[instrument(skip(_tag))]
-async fn do_job(job: Job, _tag: String) -> Result<()> {
-    match job {
+#[instrument(skip(state, _tag))]
+async fn do_job(state: JobState, payload: Job, _tag: String) -> Result<()> {
+    match payload {
         Job::Hello => {
             info!("hello monaxia!");
         }

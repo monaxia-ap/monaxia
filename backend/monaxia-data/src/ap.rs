@@ -1,3 +1,5 @@
+pub mod activity;
+
 use crate::user::{validate_username_format, UsernameError};
 
 use thiserror::Error as ThisError;

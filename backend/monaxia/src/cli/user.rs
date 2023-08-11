@@ -1,5 +1,7 @@
 use crate::repository_impl::construct_container_db;
 
+use std::sync::Arc;
+
 use anyhow::{bail, Result};
 use clap::Parser;
 use inquire::{validator::Validation, Confirm, Text};
@@ -22,7 +24,10 @@ pub enum UserSubcommand {
     Create,
 }
 
-pub async fn execute_user_subcommand(config: Config, subcommand: UserSubcommand) -> Result<()> {
+pub async fn execute_user_subcommand(
+    config: Arc<Config>,
+    subcommand: UserSubcommand,
+) -> Result<()> {
     let container = construct_container_db(&config).await?;
     match subcommand {
         UserSubcommand::Create => create_user(config, container).await?,
@@ -31,7 +36,7 @@ pub async fn execute_user_subcommand(config: Config, subcommand: UserSubcommand)
     Ok(())
 }
 
-async fn create_user(config: Config, container: Container) -> Result<()> {
+async fn create_user(config: Arc<Config>, container: Container) -> Result<()> {
     let username_range = 1..=(config.user.username_max_length);
     let username = Text::new("Username:")
         .with_validator(move |n: &str| {

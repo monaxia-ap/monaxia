@@ -4,6 +4,7 @@ use std::{
     env::{current_dir, var as env_var, VarError},
     path::{Path, PathBuf},
     process::Command,
+    sync::Arc,
 };
 
 use anyhow::{bail, Context, Result};
@@ -34,7 +35,7 @@ pub enum MxCommand {
 }
 
 pub async fn execute_migrate_subcommand(
-    config: Config,
+    config: Arc<Config>,
     subcommand: MigrateSubcommand,
 ) -> Result<()> {
     let container = construct_container_db(&config).await?;

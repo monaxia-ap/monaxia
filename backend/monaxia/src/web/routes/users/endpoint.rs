@@ -8,6 +8,8 @@ use crate::web::{
 };
 
 use axum::{extract::State, http::StatusCode};
+use serde_json::Value as JsonValue;
+use tracing::{debug, instrument};
 
 pub async fn actor(
     State(state): State<AppState>,
@@ -45,16 +47,20 @@ pub async fn actor(
     }))
 }
 
+#[instrument(skip(_state, ap_json), fields(local_user = local_user.username))]
 pub async fn inbox(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     // _: MustAcceptActivityJson,
     PathLocalUser(local_user): PathLocalUser,
+    ApJson(ap_json): ApJson<JsonValue>,
 ) -> MxResult<(StatusCode, String)> {
+    debug!("{ap_json:?}");
     Ok((StatusCode::NOT_IMPLEMENTED, "not implemented yet".into()))
 }
 
+#[instrument(skip(_state), fields(local_user = local_user.username))]
 pub async fn outbox(
-    State(state): State<AppState>,
+    State(_state): State<AppState>,
     // _: MustAcceptActivityJson,
     PathLocalUser(local_user): PathLocalUser,
 ) -> MxResult<(StatusCode, String)> {
