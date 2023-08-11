@@ -2,14 +2,14 @@ use super::schema::{ResponsePerson, ResponsePersonPublicKey};
 
 use crate::web::{
     error::{map_err_queue, MxResult},
-    extract::{ApJsonText, MustAcceptActivityJson, PathLocalUser, ApJson},
+    extract::{ApJson, ApJsonText, ApValidation, MustAcceptActivityJson, PathLocalUser},
     jsonld::JSONLD_OBJECT,
     state::AppState,
 };
 
 use axum::{extract::State, http::StatusCode};
+use monaxia_data::ap::RequestValidation;
 use monaxia_job::job::{Job, MxJob};
-use serde_json::Value as JsonValue;
 use tracing::{debug, instrument};
 
 pub async fn actor(
@@ -48,25 +48,34 @@ pub async fn actor(
     }))
 }
 
-#[instrument(skip(state, ap_json), fields(local_user = local_user.username))]
+#[instrument(skip(state, ap_validation, ap_json), fields(local_user = local_user.username))]
 pub async fn inbox(
     State(state): State<AppState>,
     PathLocalUser(local_user): PathLocalUser,
+    ap_validation: ApValidation,
     ApJsonText(ap_json): ApJsonText,
 ) -> MxResult<(StatusCode, String)> {
-    /*
-    let headers =
+    debug!(
+        "will validate: {:?}",
+        ap_validation.signature_header.headers
+    );
+
+    let validation = RequestValidation {
+        digest: ap_validation.digest,
+        signature_header: ap_validation.signature_header,
+        header_values: ap_validation.header_values,
+    };
+
     state
         .producer
         .enqueue(
-            MxJob::new_single(Job::ActivityPreprocess(ap_json, ())),
+            MxJob::new_single(Job::ActivityPreprocess(ap_json, validation)),
             None,
         )
         .await
-        .map_err(map_err_queue);
-    */
+        .map_err(map_err_queue)?;
 
-    Ok((StatusCode::NOT_IMPLEMENTED, "not implemented yet".into()))
+    Ok((StatusCode::OK, "".into()))
 }
 
 #[instrument(skip(_state), fields(local_user = local_user.username))]

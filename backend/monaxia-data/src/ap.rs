@@ -1,7 +1,13 @@
 pub mod activity;
 
-use crate::user::{validate_username_format, UsernameError};
+use crate::{
+    http::SignatureHeader,
+    user::{validate_username_format, UsernameError},
+};
 
+use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 use thiserror::Error as ThisError;
 use url::Url;
 
@@ -63,4 +69,12 @@ impl Acct {
     pub fn to_subject(&self) -> String {
         format!("acct:{}@{}", self.username, self.origin)
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[must_use]
+pub struct RequestValidation {
+    pub digest: String,
+    pub signature_header: SignatureHeader,
+    pub header_values: HashMap<String, String>,
 }

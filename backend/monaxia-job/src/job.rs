@@ -1,9 +1,10 @@
 use std::time::Duration;
 
+use monaxia_data::ap::RequestValidation;
 use monaxia_queue::retry::{Backoff, Retry};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MxJob {
     payload: Job,
     tag: String,
@@ -41,8 +42,12 @@ impl MxJob {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Job {
     /// Server has started.
     Hello,
+
+    /// Preprocesses activity json object.
+    /// Validates signature header.
+    ActivityPreprocess(String, RequestValidation),
 }

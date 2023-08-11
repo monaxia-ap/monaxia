@@ -10,6 +10,12 @@ pub mod mime {
     pub const APPLICATION_LD_JSON: &str = "application/ld+json";
 }
 
+pub mod header {
+    pub const DIGEST: &str = "digest";
+    pub const SIGNATURE: &str = "signature";
+    pub const CANONICAL_REQUEST_TARGET: &str = "(request-target)";
+}
+
 pub fn create_http_client() -> ReqwestResult<Client> {
     let http_client = ClientBuilder::new().user_agent(USER_AGENT).build()?;
     Ok(http_client)

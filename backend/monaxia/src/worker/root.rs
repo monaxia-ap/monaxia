@@ -2,7 +2,7 @@ use super::{JobState, WorkerState};
 
 use anyhow::Result;
 use monaxia_job::job::Job;
-use tracing::{error, info, instrument};
+use tracing::{debug, error, info, instrument};
 
 #[instrument(skip(state), fields(worker = state.name))]
 pub async fn worker(state: WorkerState) -> Result<()> {
@@ -34,6 +34,9 @@ async fn do_job(state: JobState, payload: Job, _tag: String) -> Result<()> {
     match payload {
         Job::Hello => {
             info!("hello monaxia!");
+        }
+        Job::ActivityPreprocess(json_text, signature) => {
+            debug!("validating activity signature: {signature:?}");
         }
     }
 

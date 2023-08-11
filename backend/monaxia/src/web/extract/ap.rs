@@ -1,6 +1,11 @@
+use std::collections::HashMap;
+
 use crate::{
-    constant::mime::{APPLICATION_ACTIVITY_JSON, APPLICATION_LD_JSON},
-    web::error::{ErrorResponse, ErrorType},
+    constant::{
+        header::{CANONICAL_REQUEST_TARGET, DIGEST, SIGNATURE},
+        mime::{APPLICATION_ACTIVITY_JSON, APPLICATION_LD_JSON},
+    },
+    web::error::{bail_err_header, map_err_extract, ErrorResponse, ErrorType},
 };
 
 use async_trait::async_trait;
@@ -16,6 +21,7 @@ use axum::{
     BoxError, Json,
 };
 use mime::{Mime, APPLICATION_JSON, TEXT_HTML};
+use monaxia_data::http::SignatureHeader;
 use serde::Serialize;
 
 /// Accept header type.
@@ -70,6 +76,7 @@ where
     }
 }
 
+/// Accepts only activity JSON, but don't deserialize.
 #[derive(Debug, Clone)]
 #[must_use]
 pub struct ApJsonText(pub String);
@@ -105,6 +112,7 @@ where
     }
 }
 
+/// Accepts only activity JSON and deserializes it.
 #[derive(Debug, Clone)]
 #[must_use]
 pub struct ApJson<T>(pub T);
@@ -123,6 +131,77 @@ where
         );
 
         response
+    }
+}
+
+/// Parses signature and digest header.
+#[derive(Debug, Clone)]
+#[must_use]
+pub struct ApValidation {
+    pub digest: String,
+    pub signature_header: SignatureHeader,
+    pub header_values: HashMap<String, String>,
+}
+
+#[async_trait]
+impl<S> FromRequestParts<S> for ApValidation
+where
+    S: Send + Sync,
+{
+    type Rejection = ErrorResponse;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        // digest header
+        let digest = {
+            let Some(digest) = parts.headers.get(DIGEST) else {
+                return bail_err_header(DIGEST)?;
+            };
+            digest.to_str().map_err(map_err_extract)?.to_string()
+        };
+
+        // signature header extraction
+        let signature_header: SignatureHeader = {
+            let Some(signature_header_str) = parts.headers.get(SIGNATURE) else {
+                return  bail_err_header(SIGNATURE)?;
+            };
+            let signature_header_str = signature_header_str
+                .to_str()
+                .map_err(map_err_extract)?
+                .to_string();
+            signature_header_str.parse().map_err(map_err_extract)?
+        };
+
+        // header values
+        let mut header_values = HashMap::new();
+        for header_name in &signature_header.headers {
+            match header_name.as_str() {
+                CANONICAL_REQUEST_TARGET => {
+                    let value = format!(
+                        "{} {}",
+                        parts.method.to_string().to_lowercase(),
+                        parts
+                            .uri
+                            .path_and_query()
+                            .map(|pq| pq.as_str())
+                            .unwrap_or("/")
+                    );
+                    header_values.insert(CANONICAL_REQUEST_TARGET.into(), value);
+                }
+                header => {
+                    let Some(value) = parts.headers.get(header) else {
+                        return bail_err_header(header)?;
+                    };
+                    let value = value.to_str().map_err(map_err_extract)?.to_string();
+                    header_values.insert(header.to_string(), value);
+                }
+            }
+        }
+
+        Ok(ApValidation {
+            digest,
+            signature_header,
+            header_values,
+        })
     }
 }
 

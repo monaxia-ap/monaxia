@@ -1493,6 +1493,7 @@ dependencies = [
  "monaxia-data",
  "monaxia-queue",
  "serde",
+ "serde_json",
  "thiserror",
  "tracing",
 ]
