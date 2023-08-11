@@ -1,5 +1,4 @@
 use super::schema::{ResponsePerson, ResponsePersonPublicKey};
-
 use crate::web::{
     error::{map_err_queue, MxResult},
     extract::{ApJson, ApJsonText, ApValidation, MustAcceptActivityJson, PathLocalUser},
@@ -8,7 +7,10 @@ use crate::web::{
 };
 
 use axum::{extract::State, http::StatusCode};
-use monaxia_data::ap::RequestValidation;
+use monaxia_data::{
+    ap::RequestValidation,
+    user::{generate_local_user_url, LocalUserUrl},
+};
 use monaxia_job::job::{Job, MxJob};
 use serde_variant::to_variant_name;
 use tracing::{debug, instrument};
@@ -19,20 +21,10 @@ pub async fn actor(
     PathLocalUser(local_user): PathLocalUser,
 ) -> MxResult<ApJson<ResponsePerson>> {
     let base_url = state.config.cached.server_base_url();
-    let id_url = base_url
-        .join(&format!("/users/{}", local_user.id))
-        .expect("URL error");
-    let inbox_url = base_url
-        .join(&format!("/users/{}/inbox", local_user.id))
-        .expect("URL error");
-    let outbox_url = base_url
-        .join(&format!("/users/{}/outbox", local_user.id))
-        .expect("URL error");
-    let pubkey_id = {
-        let mut url = id_url.clone();
-        url.set_fragment(Some("main-key"));
-        url
-    };
+    let id_url = generate_local_user_url(base_url, &local_user.id, LocalUserUrl::Id);
+    let inbox_url = generate_local_user_url(base_url, &local_user.id, LocalUserUrl::Inbox);
+    let outbox_url = generate_local_user_url(base_url, &local_user.id, LocalUserUrl::Outbox);
+    let pubkey_id = generate_local_user_url(base_url, &local_user.id, LocalUserUrl::KeyId);
 
     Ok(ApJson(ResponsePerson {
         jsonld: JSONLD_OBJECT.clone(),

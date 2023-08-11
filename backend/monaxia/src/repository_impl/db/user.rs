@@ -1,7 +1,10 @@
 use async_trait::async_trait;
 use monaxia_data::{
     id::now_order58,
-    user::{LocalUser, LocalUserRegistration, RemoteUserRegistration},
+    user::{
+        generate_local_user_url, LocalUser, LocalUserRegistration, LocalUserUrl,
+        RemoteUserRegistration,
+    },
 };
 use monaxia_db::user::{
     action::{
@@ -46,20 +49,26 @@ impl UserRepository for UserRepositoryImpl {
         let mut tx = self.0.begin().await?;
         let conn = tx.acquire().await?;
 
+        // register common part
         let id = now_order58();
+
         let public_key = registration
             .private_key
             .to_public_key()
             .to_public_key_pem(LineEnding::LF)
             .expect("failed to write public key");
+        let public_key_id =
+            generate_local_user_url(&registration.base_url, &id, LocalUserUrl::KeyId).to_string();
         let insertion = UserInsertion {
             id: id.clone(),
             username: registration.username.clone(),
             domain: domain.to_string(),
             public_key,
+            public_key_id,
         };
         register_user(&mut *conn, insertion).await?;
 
+        // local-only part
         let private_key = registration
             .private_key
             .to_pkcs8_pem(LineEnding::LF)
@@ -92,6 +101,7 @@ impl UserRepository for UserRepositoryImpl {
             username: registration.username.clone(),
             domain: domain.to_string(),
             public_key,
+            public_key_id: registration.public_key_id,
         };
         register_user(&mut conn, insertion).await?;
 

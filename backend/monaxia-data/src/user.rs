@@ -4,6 +4,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use rsa::{RsaPrivateKey, RsaPublicKey};
 use thiserror::Error as ThisError;
+use url::Url;
 
 static RE_USERNAME: Lazy<Regex> =
     Lazy::new(|| Regex::new(r#"^[A-Za-z0-9_]+$"#).expect("invalid regex"));
@@ -29,27 +30,15 @@ pub enum UsernameError {
 pub struct RemoteUserRegistration {
     pub username: String,
     pub public_key: RsaPublicKey,
+    pub public_key_id: String,
 }
 
 #[derive(Debug)]
 pub struct LocalUserRegistration {
+    pub base_url: Url,
     pub username: String,
     pub private_key: RsaPrivateKey,
 }
-
-#[derive(Debug, Clone)]
-pub struct LocalUser {
-    pub id: String,
-    pub id_seq: String,
-    pub username: String,
-    pub public_key: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct RemoteUser {}
-
-#[derive(Debug, Clone)]
-pub struct UserPublicKey {}
 
 /// Validates username format.
 pub fn validate_username_format(
@@ -69,4 +58,43 @@ pub fn validate_username_format(
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+pub struct LocalUser {
+    pub id: String,
+    pub id_seq: String,
+    pub username: String,
+    pub public_key: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct RemoteUser {}
+
+#[derive(Debug, Clone)]
+pub struct UserPublicKey {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LocalUserUrl {
+    /// `/users/:user_id`
+    Id,
+
+    /// `/users/:user_id/inbox`
+    Inbox,
+
+    /// `/users/:user_id/outbox`
+    Outbox,
+
+    /// `/users/:user_id#main-key`
+    KeyId,
+}
+
+pub fn generate_local_user_url(base_url: &Url, user_id: &str, ty: LocalUserUrl) -> Url {
+    match ty {
+        LocalUserUrl::Id => base_url.join(&format!("/users/{}", user_id)),
+        LocalUserUrl::Inbox => base_url.join(&format!("/users/{}/inbox", user_id)),
+        LocalUserUrl::Outbox => base_url.join(&format!("/users/{}/outbox", user_id)),
+        LocalUserUrl::KeyId => base_url.join(&format!("/users/{}#main-key", user_id)),
+    }
+    .expect("URL error")
 }

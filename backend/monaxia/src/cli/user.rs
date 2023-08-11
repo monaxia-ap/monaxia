@@ -82,6 +82,7 @@ async fn create_user(config: Arc<Config>, container: Container) -> Result<()> {
         .user
         .register_local_user(
             LocalUserRegistration {
+                base_url: config.cached.server_base_url().clone(),
                 username,
                 private_key,
             },

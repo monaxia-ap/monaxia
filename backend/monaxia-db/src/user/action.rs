@@ -41,12 +41,14 @@ pub async fn register_user(conn: &mut Connection, insertion: UserInsertion) -> S
             UserDef::Username,
             UserDef::Domain,
             UserDef::PublicKey,
+            UserDef::PublicKeyId,
         ])
         .values([
             insertion.id.into(),
             insertion.username.into(),
             insertion.domain.into(),
             insertion.public_key.into(),
+            insertion.public_key_id.into(),
         ])
         .expect("failed to encode")
         .build_sqlx(QueryBuilder);

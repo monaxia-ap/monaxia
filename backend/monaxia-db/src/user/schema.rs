@@ -10,6 +10,7 @@ pub enum UserDef {
     Username,
     Domain,
     PublicKey,
+    PublicKeyId,
     DisplayName,
     Description,
 }
@@ -28,6 +29,7 @@ pub struct UserInsertion {
     pub username: String,
     pub domain: String,
     pub public_key: String,
+    pub public_key_id: String,
 }
 
 #[derive(Debug)]
