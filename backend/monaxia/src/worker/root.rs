@@ -2,6 +2,7 @@ use super::{JobState, WorkerState};
 
 use anyhow::Result;
 use monaxia_job::job::Job;
+use serde_variant::to_variant_name;
 use tracing::{debug, error, info, instrument};
 
 #[instrument(skip(state), fields(worker = state.name))]
@@ -29,14 +30,20 @@ pub async fn worker(state: WorkerState) -> Result<()> {
     Ok(())
 }
 
-#[instrument(skip(state, _tag))]
+#[instrument(
+    skip(state, _tag),
+    fields(job = to_variant_name(&payload).expect("invalid job"))
+)]
 async fn do_job(state: JobState, payload: Job, _tag: String) -> Result<()> {
     match payload {
         Job::Hello => {
             info!("hello monaxia!");
         }
-        Job::ActivityPreprocess(json_text, signature) => {
-            debug!("validating activity signature: {signature:?}");
+        Job::ActivityPreprocess(json_text, validation) => {
+            debug!(
+                "validating signature with headers: {:?}",
+                validation.signature_header.headers
+            );
         }
     }
 
