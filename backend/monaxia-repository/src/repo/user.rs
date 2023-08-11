@@ -28,7 +28,10 @@ pub trait UserRepository: Repository {
         domain: &str,
     ) -> RepoResult<User>;
 
-    /// Finds a local user by username.
+    /// Finds a user by user column.
+    async fn find_user(&self, user_find: UserFind<'_>) -> RepoResult<Option<User>>;
+
+    /// Finds a local user by user column.
     async fn find_local_user(&self, user_find: UserFind<'_>) -> RepoResult<Option<LocalUser>>;
 }
 

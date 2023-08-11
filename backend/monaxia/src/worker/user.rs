@@ -9,7 +9,7 @@ use monaxia_data::{
 use monaxia_repository::repo::user::UserFind;
 use reqwest::header::ACCEPT;
 use rsa::{pkcs8::DecodePublicKey, RsaPublicKey};
-use tracing::error;
+use tracing::{debug, error};
 
 pub(super) async fn retrieve_public_key(state: &JobState, key_id: &str) -> Result<UserPublicKey> {
     // attention: AUTHORIZED_FETCH
@@ -18,13 +18,15 @@ pub(super) async fn retrieve_public_key(state: &JobState, key_id: &str) -> Resul
     let user = state
         .container
         .user
-        .find_local_user(UserFind::KeyId(key_id))
+        .find_user(UserFind::KeyId(key_id))
         .await?;
     if let Some(user) = user {
         return Ok(user.public_key);
     }
 
     // unknown remote user
+    debug!("public key {key_id} not found, fetching from remote");
+
     let resp = state
         .http_client
         .get(key_id)
@@ -52,6 +54,7 @@ pub(super) async fn retrieve_public_key(state: &JobState, key_id: &str) -> Resul
         bail!("public key fetch error");
     };
 
+    state.container.domain.acknowledge(remote_domain).await?;
     let user = state
         .container
         .user

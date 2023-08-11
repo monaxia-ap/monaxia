@@ -8,10 +8,10 @@ use monaxia_data::{
 };
 use monaxia_db::user::{
     action::{
-        fetch_local_users_count, find_local_user_by_id, find_local_user_by_key_id,
-        find_local_user_by_username, local_user_occupied, register_local_user, register_user,
+        fetch_local_users_count, find_user_by_column, local_user_occupied, register_local_user,
+        register_user,
     },
-    schema::{LocalUserInsertion, UserInsertion},
+    schema::{LocalUserInsertion, UserDef, UserInsertion},
 };
 use monaxia_repository::{
     repo::{
@@ -128,12 +128,39 @@ impl UserRepository for UserRepositoryImpl {
         Ok(user)
     }
 
+    async fn find_user(&self, user_find: UserFind<'_>) -> RepoResult<Option<User>> {
+        let mut conn = self.0.acquire().await?;
+        let user = match user_find {
+            UserFind::Username(un) => {
+                find_user_by_column(&mut conn, false, UserDef::Username, un).await?
+            }
+            UserFind::UserId(id) => find_user_by_column(&mut conn, false, UserDef::Id, id).await?,
+            UserFind::KeyId(kid) => {
+                find_user_by_column(&mut conn, false, UserDef::PublicKeyId, kid).await?
+            }
+        };
+        Ok(user.map(|u| User {
+            id: u.id,
+            id_seq: u.id_seq.to_string(),
+            username: u.username,
+            domain: u.domain,
+            public_key: UserPublicKey {
+                key_id: u.public_key_id,
+                key_pem: u.public_key,
+            },
+        }))
+    }
+
     async fn find_local_user(&self, user_find: UserFind<'_>) -> RepoResult<Option<LocalUser>> {
         let mut conn = self.0.acquire().await?;
         let user = match user_find {
-            UserFind::Username(un) => find_local_user_by_username(&mut conn, un).await?,
-            UserFind::UserId(id) => find_local_user_by_id(&mut conn, id).await?,
-            UserFind::KeyId(kid) => find_local_user_by_key_id(&mut conn, kid).await?,
+            UserFind::Username(un) => {
+                find_user_by_column(&mut conn, true, UserDef::Username, un).await?
+            }
+            UserFind::UserId(id) => find_user_by_column(&mut conn, true, UserDef::Id, id).await?,
+            UserFind::KeyId(kid) => {
+                find_user_by_column(&mut conn, true, UserDef::PublicKeyId, kid).await?
+            }
         };
         Ok(user.map(|u| LocalUser {
             id: u.id,

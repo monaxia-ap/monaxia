@@ -47,12 +47,3 @@ pub struct LocalUserInsertion<'a> {
     pub user_id: String,
     pub private_key: &'a str, // this struct does not clear
 }
-
-#[derive(Debug, Clone, FromRow)]
-pub struct LocalUser {
-    pub id: String,
-    pub id_seq: i64,
-    pub username: String,
-    pub public_key: String,
-    pub public_key_id: String,
-}
