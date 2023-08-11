@@ -8,3 +8,4 @@ sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
 sqlx = { workspace = true }
 time = { workspace = true }
+tracing = { workspace = true }

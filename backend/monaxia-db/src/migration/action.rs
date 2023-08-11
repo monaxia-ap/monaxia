@@ -6,7 +6,9 @@ use sea_query::{
 use sea_query_binder::SqlxBinder;
 use sqlx::{PgConnection as Connection, Result as SqlxResult};
 use time::OffsetDateTime;
+use tracing::instrument;
 
+#[instrument(skip(conn))]
 pub async fn ensure_migrations_table(conn: &mut Connection) -> SqlxResult<()> {
     let query = Table::create()
         .if_not_exists()
@@ -42,6 +44,7 @@ pub async fn ensure_migrations_table(conn: &mut Connection) -> SqlxResult<()> {
     Ok(())
 }
 
+#[instrument(skip(conn))]
 pub async fn fetch_last_migration(conn: &mut Connection) -> SqlxResult<Option<Migration>> {
     let (query, values) = Query::select()
         .columns([
@@ -59,6 +62,7 @@ pub async fn fetch_last_migration(conn: &mut Connection) -> SqlxResult<Option<Mi
     Ok(row)
 }
 
+#[instrument(skip(conn))]
 pub async fn register_migration(
     conn: &mut Connection,
     latest_migration_datetime: OffsetDateTime,

@@ -3,7 +3,9 @@ use super::schema::{LocalUser, LocalUserDef, LocalUserInsertion, User, UserDef, 
 use sea_query::{Expr, Func, JoinType, PostgresQueryBuilder as QueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use sqlx::{PgConnection as Connection, Result as SqlxResult};
+use tracing::instrument;
 
+#[instrument(skip(conn))]
 pub async fn fetch_local_users_count(conn: &mut Connection) -> SqlxResult<usize> {
     let (query, _) = Query::select()
         .expr(Func::count(Expr::col(LocalUserDef::UserId)))
@@ -14,6 +16,7 @@ pub async fn fetch_local_users_count(conn: &mut Connection) -> SqlxResult<usize>
     Ok(value as usize)
 }
 
+#[instrument(skip(conn))]
 pub async fn local_user_occupied(conn: &mut Connection, username: &str) -> SqlxResult<bool> {
     let (query, values) = Query::select()
         .column((UserDef::Table, UserDef::Id))
@@ -33,6 +36,7 @@ pub async fn local_user_occupied(conn: &mut Connection, username: &str) -> SqlxR
     Ok(occupied.is_some())
 }
 
+#[instrument(skip(conn))]
 pub async fn register_user(conn: &mut Connection, insertion: UserInsertion) -> SqlxResult<User> {
     let (query, values) = Query::insert()
         .into_table(UserDef::Table)
@@ -60,6 +64,7 @@ pub async fn register_user(conn: &mut Connection, insertion: UserInsertion) -> S
     Ok(row)
 }
 
+#[instrument(skip(conn))]
 pub async fn register_local_user<'a>(
     conn: &'a mut Connection,
     insertion: LocalUserInsertion<'a>,
@@ -75,6 +80,7 @@ pub async fn register_local_user<'a>(
     Ok(())
 }
 
+#[instrument(skip(conn))]
 pub async fn find_local_user_by_username(
     conn: &mut Connection,
     username: &str,
@@ -110,6 +116,7 @@ pub async fn find_local_user_by_username(
     Ok(row)
 }
 
+#[instrument(skip(conn))]
 pub async fn find_local_user_by_id(
     conn: &mut Connection,
     user_id: &str,
@@ -145,6 +152,7 @@ pub async fn find_local_user_by_id(
     Ok(row)
 }
 
+#[instrument(skip(conn))]
 pub async fn find_local_user_by_key_id(
     conn: &mut Connection,
     key_id: &str,
