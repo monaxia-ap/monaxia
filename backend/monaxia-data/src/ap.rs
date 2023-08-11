@@ -1,4 +1,5 @@
 pub mod activity;
+pub mod object;
 
 use crate::{
     http::SignatureHeader,

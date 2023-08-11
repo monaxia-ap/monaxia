@@ -3,13 +3,13 @@ use monaxia_data::{
     id::now_order58,
     user::{
         generate_local_user_url, LocalUser, LocalUserRegistration, LocalUserUrl,
-        RemoteUserRegistration,
+        RemoteUserRegistration, User, UserPublicKey,
     },
 };
 use monaxia_db::user::{
     action::{
-        fetch_local_users_count, find_local_user_by_id, find_local_user_by_username,
-        local_user_occupied, register_local_user, register_user,
+        fetch_local_users_count, find_local_user_by_id, find_local_user_by_key_id,
+        find_local_user_by_username, local_user_occupied, register_local_user, register_user,
     },
     schema::{LocalUserInsertion, UserInsertion},
 };
@@ -45,7 +45,7 @@ impl UserRepository for UserRepositoryImpl {
         &self,
         registration: LocalUserRegistration,
         domain: &str,
-    ) -> RepoResult<String> {
+    ) -> RepoResult<User> {
         let mut tx = self.0.begin().await?;
         let conn = tx.acquire().await?;
 
@@ -66,7 +66,7 @@ impl UserRepository for UserRepositoryImpl {
             public_key,
             public_key_id,
         };
-        register_user(&mut *conn, insertion).await?;
+        let registered_user = register_user(&mut *conn, insertion).await?;
 
         // local-only part
         let private_key = registration
@@ -74,21 +74,31 @@ impl UserRepository for UserRepositoryImpl {
             .to_pkcs8_pem(LineEnding::LF)
             .expect("failed to write private key");
         let local_insertion = LocalUserInsertion {
-            user_id: id.clone(),
+            user_id: registered_user.id.clone(),
             private_key: private_key.as_str(),
         };
         register_local_user(&mut *conn, local_insertion).await?;
 
         tx.commit().await?;
 
-        Ok(id)
+        let user = User {
+            id: registered_user.id,
+            id_seq: registered_user.id_seq.to_string(),
+            username: registered_user.username,
+            domain: registered_user.domain,
+            public_key: UserPublicKey {
+                key_id: registered_user.public_key_id,
+                key_pem: registered_user.public_key,
+            },
+        };
+        Ok(user)
     }
 
     async fn register_remote_user(
         &self,
         registration: RemoteUserRegistration,
         domain: &str,
-    ) -> RepoResult<String> {
+    ) -> RepoResult<User> {
         let mut conn = self.0.acquire().await?;
 
         let id = now_order58();
@@ -103,9 +113,19 @@ impl UserRepository for UserRepositoryImpl {
             public_key,
             public_key_id: registration.public_key_id,
         };
-        register_user(&mut conn, insertion).await?;
+        let registered_user = register_user(&mut conn, insertion).await?;
 
-        todo!();
+        let user = User {
+            id: registered_user.id,
+            id_seq: registered_user.id_seq.to_string(),
+            username: registered_user.username,
+            domain: registered_user.domain,
+            public_key: UserPublicKey {
+                key_id: registered_user.public_key_id,
+                key_pem: registered_user.public_key,
+            },
+        };
+        Ok(user)
     }
 
     async fn find_local_user(&self, user_find: UserFind<'_>) -> RepoResult<Option<LocalUser>> {
@@ -113,12 +133,16 @@ impl UserRepository for UserRepositoryImpl {
         let user = match user_find {
             UserFind::Username(un) => find_local_user_by_username(&mut conn, un).await?,
             UserFind::UserId(id) => find_local_user_by_id(&mut conn, id).await?,
+            UserFind::KeyId(kid) => find_local_user_by_key_id(&mut conn, kid).await?,
         };
         Ok(user.map(|u| LocalUser {
             id: u.id,
             id_seq: u.id_seq.to_string(),
             username: u.username,
-            public_key: u.public_key,
+            public_key: UserPublicKey {
+                key_id: u.public_key_id,
+                key_pem: u.public_key,
+            },
         }))
     }
 }

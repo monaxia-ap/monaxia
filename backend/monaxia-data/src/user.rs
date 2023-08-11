@@ -65,14 +65,23 @@ pub struct LocalUser {
     pub id: String,
     pub id_seq: String,
     pub username: String,
-    pub public_key: String,
+    pub public_key: UserPublicKey,
 }
 
 #[derive(Debug, Clone)]
-pub struct RemoteUser {}
+pub struct User {
+    pub id: String,
+    pub id_seq: String,
+    pub username: String,
+    pub domain: String,
+    pub public_key: UserPublicKey,
+}
 
 #[derive(Debug, Clone)]
-pub struct UserPublicKey {}
+pub struct UserPublicKey {
+    pub key_id: String,
+    pub key_pem: String,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LocalUserUrl {

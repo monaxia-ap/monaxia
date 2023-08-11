@@ -24,7 +24,6 @@ pub async fn actor(
     let id_url = generate_local_user_url(base_url, &local_user.id, LocalUserUrl::Id);
     let inbox_url = generate_local_user_url(base_url, &local_user.id, LocalUserUrl::Inbox);
     let outbox_url = generate_local_user_url(base_url, &local_user.id, LocalUserUrl::Outbox);
-    let pubkey_id = generate_local_user_url(base_url, &local_user.id, LocalUserUrl::KeyId);
 
     Ok(ApJson(ResponsePerson {
         jsonld: JSONLD_OBJECT.clone(),
@@ -34,9 +33,9 @@ pub async fn actor(
         inbox: inbox_url,
         outbox: outbox_url,
         public_key: ResponsePersonPublicKey {
-            id: pubkey_id.to_string(),
             owner: id_url.to_string(),
-            public_key_pem: local_user.public_key,
+            id: local_user.public_key.key_id,
+            public_key_pem: local_user.public_key.key_pem,
         },
     }))
 }

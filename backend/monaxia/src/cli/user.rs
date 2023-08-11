@@ -78,7 +78,7 @@ async fn create_user(config: Arc<Config>, container: Container) -> Result<()> {
 
     let local_origin = config.cached.acct_origin();
     container.domain.acknowledge(&local_origin).await?;
-    let user_id = container
+    let user = container
         .user
         .register_local_user(
             LocalUserRegistration {
@@ -91,6 +91,6 @@ async fn create_user(config: Arc<Config>, container: Container) -> Result<()> {
         .await?;
 
     println!("Registered successfully!");
-    println!("User ID is {user_id}");
+    println!("User ID is {}", user.id);
     Ok(())
 }

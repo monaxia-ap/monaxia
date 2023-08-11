@@ -16,7 +16,8 @@ pub(super) async fn validate_request(
         validation.signature_header.headers
     );
 
-    let public_key = retrieve_public_key(&validation.signature_header.key_id).await?;
+    let public_key = retrieve_public_key(&state, &validation.signature_header.key_id).await?;
+    debug!("public key is: {public_key:?}");
 
     Ok(())
 }
