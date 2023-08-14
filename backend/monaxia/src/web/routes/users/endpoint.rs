@@ -48,7 +48,7 @@ pub async fn inbox(
     ApJsonText(ap_json): ApJsonText,
 ) -> MxResult<(StatusCode, String)> {
     let validation = RequestValidation {
-        digest: ap_validation.digest,
+        digest_header: ap_validation.digest_header,
         signature_header: ap_validation.signature_header,
         header_values: ap_validation.header_values,
     };

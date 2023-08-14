@@ -21,8 +21,9 @@ use axum::{
     BoxError, Json,
 };
 use mime::{Mime, APPLICATION_JSON, TEXT_HTML};
-use monaxia_data::http::SignatureHeader;
+use monaxia_data::http::{DigestHeader, SignatureHeader};
 use serde::Serialize;
+use tracing::debug;
 
 /// Accept header type.
 #[derive(Debug, Clone, Copy)]
@@ -138,7 +139,7 @@ where
 #[derive(Debug, Clone)]
 #[must_use]
 pub struct ApValidation {
-    pub digest: String,
+    pub digest_header: DigestHeader,
     pub signature_header: SignatureHeader,
     pub header_values: HashMap<String, String>,
 }
@@ -152,17 +153,19 @@ where
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         // digest header
-        let digest = {
+        let digest_header: DigestHeader = {
             let Some(digest) = parts.headers.get(DIGEST) else {
                 return bail_err_header(DIGEST)?;
             };
-            digest.to_str().map_err(map_err_extract)?.to_string()
+            let digest_header_str = digest.to_str().map_err(map_err_extract)?.to_string();
+            debug!("parsing digest {digest_header_str}");
+            digest_header_str.parse().map_err(map_err_extract)?
         };
 
         // signature header extraction
         let signature_header: SignatureHeader = {
             let Some(signature_header_str) = parts.headers.get(SIGNATURE) else {
-                return  bail_err_header(SIGNATURE)?;
+                return bail_err_header(SIGNATURE)?;
             };
             let signature_header_str = signature_header_str
                 .to_str()
@@ -198,7 +201,7 @@ where
         }
 
         Ok(ApValidation {
-            digest,
+            digest_header,
             signature_header,
             header_values,
         })

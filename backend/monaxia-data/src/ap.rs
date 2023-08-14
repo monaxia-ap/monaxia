@@ -2,7 +2,7 @@ pub mod activity;
 pub mod object;
 
 use crate::{
-    http::SignatureHeader,
+    http::{DigestHeader, SignatureHeader},
     user::{validate_username_format, UsernameError},
 };
 
@@ -75,7 +75,7 @@ impl Acct {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[must_use]
 pub struct RequestValidation {
-    pub digest: String,
+    pub digest_header: DigestHeader,
     pub signature_header: SignatureHeader,
     pub header_values: HashMap<String, String>,
 }
