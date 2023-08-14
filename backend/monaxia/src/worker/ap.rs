@@ -11,8 +11,9 @@ use rsa::{
     RsaPublicKey,
 };
 use sha2::{Digest, Sha256, Sha512};
-use tracing::{debug, error};
+use tracing::{debug, error, instrument};
 
+#[instrument(skip(state, json_text, validation), fields(key = validation.signature_header.key_id))]
 pub(super) async fn validate_request(
     state: JobState,
     json_text: String,
