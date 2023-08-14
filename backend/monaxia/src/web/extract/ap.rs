@@ -11,7 +11,7 @@ use crate::{
 use async_trait::async_trait;
 use axum::{
     body::HttpBody,
-    extract::{FromRequest, FromRequestParts},
+    extract::{FromRequest, FromRequestParts, OriginalUri},
     http::{
         header::{ACCEPT, CONTENT_TYPE},
         request::Parts,
@@ -179,11 +179,14 @@ where
         for header_name in &signature_header.headers {
             match header_name.as_str() {
                 CANONICAL_REQUEST_TARGET => {
+                    let OriginalUri(orig_uri) = parts
+                        .extensions
+                        .get::<OriginalUri>()
+                        .expect("original URI not found");
                     let value = format!(
                         "{} {}",
                         parts.method.to_string().to_lowercase(),
-                        parts
-                            .uri
+                        orig_uri
                             .path_and_query()
                             .map(|pq| pq.as_str())
                             .unwrap_or("/")
