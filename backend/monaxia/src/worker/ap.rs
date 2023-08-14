@@ -31,14 +31,6 @@ pub(super) async fn validate_request(
     }
 
     // header signature
-    if validation.signature_header.algorithm != "rsa-sha256" {
-        error!(
-            "unsupported signature algorithm: {}",
-            validation.signature_header.algorithm
-        );
-        bail!("request validation error");
-    }
-
     let verifing_content = {
         let headers = validation.signature_header.headers;
         let mut header_values = validation.header_values;
@@ -55,14 +47,27 @@ pub(super) async fn validate_request(
 
     let public_key = retrieve_public_key(&state, &validation.signature_header.key_id).await?;
     let rsa_pubkey = RsaPublicKey::from_public_key_pem(&public_key.key_pem)?;
-    let rsa_verikey = VerifyingKey::<Sha256>::new(rsa_pubkey);
-
-    match rsa_verikey.verify(verifing_content.as_bytes(), &signature) {
+    let verification = match validation.signature_header.algorithm.as_str() {
+        "rsa-sha256" => {
+            let key = VerifyingKey::<Sha256>::new(rsa_pubkey);
+            key.verify(verifing_content.as_bytes(), &signature)
+        }
+        "hs2019" => {
+            let key = VerifyingKey::<Sha512>::new(rsa_pubkey);
+            key.verify(verifing_content.as_bytes(), &signature)
+        }
+        algorithm => {
+            error!("unsupported signature algorithm: {algorithm}");
+            bail!("request validation error");
+        }
+    };
+    match verification {
         Ok(()) => {
             debug!("signature verified");
         }
         Err(e) => {
             error!("signature failed: {e}");
+            bail!("request validation error");
         }
     }
 
