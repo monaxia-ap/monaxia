@@ -19,7 +19,7 @@ pub struct AppState {
 
 pub async fn construct_state(config: Arc<Config>, producer: Producer<MxJob>) -> Result<AppState> {
     let container = construct_container_db(&config).await?;
-    let http_client = create_http_client()?;
+    let http_client = create_http_client(&config)?;
 
     Ok(AppState {
         config,
@@ -36,7 +36,7 @@ pub fn construct_state_test() -> AppState {
     let (producer, _) = create_test_queues();
     let config = Default::default();
     let container = construct_container_test();
-    let http_client = create_http_client().expect("invalid client");
+    let http_client = create_http_client(&config).expect("invalid client");
 
     AppState {
         config: Arc::new(config),

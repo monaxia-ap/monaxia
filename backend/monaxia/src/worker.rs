@@ -34,7 +34,7 @@ struct JobState {
 
 pub async fn spawn_workers(config: Arc<Config>, consumers: Vec<Consumer<MxJob>>) -> Result<()> {
     let container = construct_container_db(&config).await?;
-    let http_client = create_http_client()?;
+    let http_client = create_http_client(&config)?;
 
     info!("spawning {} workers", consumers.len());
     for (i, consumer) in consumers.into_iter().enumerate() {
