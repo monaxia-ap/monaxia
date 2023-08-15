@@ -1,5 +1,5 @@
 use super::JobState;
-use crate::constant::mime::APPLICATION_ACTIVITY_JSON;
+use crate::misc::mime::APPLICATION_ACTIVITY_JSON;
 
 use anyhow::{bail, Result};
 use monaxia_data::{

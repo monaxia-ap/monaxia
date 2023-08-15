@@ -4,7 +4,7 @@ use super::schema::{
     WellknownWebfinger, WellknownWebfingerLink,
 };
 use crate::{
-    constant::{SOFTWARE_NAME, VERSION},
+    misc::{SOFTWARE_NAME, VERSION},
     web::{
         error::{bail_other, map_err_generic, map_err_repository, MxResult},
         extract::RjQuery,

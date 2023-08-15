@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    constant::{
+    misc::{
         header::{CANONICAL_REQUEST_TARGET, DIGEST, SIGNATURE},
         mime::{APPLICATION_ACTIVITY_JSON, APPLICATION_LD_JSON},
     },
