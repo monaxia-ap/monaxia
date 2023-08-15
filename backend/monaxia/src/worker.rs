@@ -140,11 +140,11 @@ async fn do_job(state: JobState, payload: Job, _tag: String) -> Result<()> {
             info!("hello monaxia!");
         }
         Job::ActivityPreprocess(json_text, validation) => {
-            let next = ap::preprocess_activity(state.clone(), json_text, validation).await?;
+            let next = ap::preprocess_activity(&state, json_text, validation).await?;
             state.producer.enqueue(next, None).await?;
         }
         Job::ActivityDistribution(raw_activity) => {
-            ap::activity_distribution(state, raw_activity).await?;
+            ap::activity_distribution(&state, raw_activity).await?;
         }
     }
     Ok(())

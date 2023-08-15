@@ -67,7 +67,7 @@ where
         };
 
         let payload =
-            bincode::deserialize(&delivery.data).map_err(|e| Error::Serialization(e.into()))?;
+            rmp_serde::from_slice(&delivery.data).map_err(|e| Error::Serialization(e.into()))?;
         let tag = Tag(delivery.acker);
         Ok(Some((payload, tag)))
     }

@@ -19,7 +19,7 @@ use tracing::{debug, error, instrument};
 
 #[instrument(skip(state, json_text, validation), fields(key = validation.signature_header.key_id))]
 pub(super) async fn preprocess_activity(
-    state: JobState,
+    state: &JobState,
     json_text: String,
     validation: RequestValidation,
 ) -> Result<MxJob> {
@@ -91,7 +91,7 @@ pub(super) async fn preprocess_activity(
 
 #[instrument(skip(state, raw_activity))]
 pub(super) async fn activity_distribution(
-    state: JobState,
+    state: &JobState,
     raw_activity: RawActivity,
 ) -> Result<Option<MxJob>> {
     debug!("Activity type: {}", raw_activity.ty);
