@@ -4,7 +4,7 @@ mod jsonld;
 mod routes;
 pub mod state;
 
-use crate::worker::{create_queues, spawn_workers};
+use crate::worker::start_workers;
 
 use std::sync::Arc;
 
@@ -22,8 +22,7 @@ use tracing::{debug, info, Span};
 
 pub async fn run_server(config: Arc<Config>) -> Result<()> {
     // start workers
-    let (producer, consumers) = create_queues(&config).await?;
-    spawn_workers(config.clone(), consumers).await?;
+    let producer = start_workers(config.clone()).await?;
 
     // start web server
     let state = state::construct_state(config.clone(), producer.clone()).await?;

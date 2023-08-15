@@ -31,9 +31,9 @@ pub async fn construct_state(config: Arc<Config>, producer: Producer<MxJob>) -> 
 
 #[cfg(test)]
 pub fn construct_state_test() -> AppState {
-    use crate::{repository_impl::construct_container_test, worker::create_test_queues};
+    use crate::{repository_impl::construct_container_test, worker::start_test_workers};
 
-    let (producer, _) = create_test_queues();
+    let (producer, _) = start_test_workers();
     let config = Default::default();
     let container = construct_container_test();
     let http_client = create_http_client(&config).expect("invalid client");
