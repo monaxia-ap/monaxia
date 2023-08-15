@@ -2,7 +2,9 @@ use std::fmt::{Formatter, Result as FmtResult};
 
 use once_cell::sync::Lazy;
 use serde::{
-    de::{value::MapAccessDeserializer, Error as SerdeDeError, MapAccess, Visitor},
+    de::{
+        value::MapAccessDeserializer, DeserializeOwned, Error as SerdeDeError, MapAccess, Visitor,
+    },
     Deserialize, Deserializer, Serialize, Serializer,
 };
 use serde_json::{json, Value as JsonValue};
@@ -24,7 +26,7 @@ pub static JSONLD_OBJECT: Lazy<JsonLd> = Lazy::new(|| JsonLd {
 /// Contains `@context` property. supposed to used with `#[serde(flatten)]`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonLd {
-    #[serde(rename = "@context")]
+    #[serde(rename = "@context", deserialize_with = "single_sequence")]
     pub context: Vec<JsonLdContext>,
 }
 
@@ -77,5 +79,27 @@ impl<'de> Deserialize<'de> for JsonLdContext {
         }
 
         deserializer.deserialize_any(ContextVisitor)
+    }
+}
+
+fn single_sequence<'de, T, D>(deserializer: D) -> Result<Vec<T>, D::Error>
+where
+    T: DeserializeOwned,
+    D: Deserializer<'de>,
+{
+    let base_value = JsonValue::deserialize(deserializer)?;
+    match base_value {
+        JsonValue::Array(array) => {
+            let sequence = array
+                .into_iter()
+                .map(serde_json::from_value)
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(SerdeDeError::custom)?;
+            Ok(sequence)
+        }
+        otherwise => {
+            let single_value = serde_json::from_value(otherwise).map_err(SerdeDeError::custom)?;
+            Ok(vec![single_value])
+        }
     }
 }

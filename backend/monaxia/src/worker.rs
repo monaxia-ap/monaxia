@@ -29,6 +29,7 @@ pub struct WorkerState {
 struct JobState {
     pub config: Arc<Config>,
     pub container: Container,
+    pub producer: Producer<MxJob>,
     pub http_client: Client,
 }
 
@@ -37,7 +38,7 @@ pub async fn start_workers(config: Arc<Config>) -> Result<Producer<MxJob>> {
     let producer = create_amqp_producer(&conn, "producer").await?;
     let consumers = create_amqp_consumer(&conn, "consumer", config.queue.workers).await?;
 
-    spawn_workers(config.clone(), consumers).await?;
+    spawn_workers(config.clone(), producer.clone(), consumers).await?;
 
     Ok(producer)
 }
@@ -53,7 +54,11 @@ pub fn start_test_workers() -> (Producer<MxJob>, Consumer<MxJob>) {
     (producer, consumer)
 }
 
-async fn spawn_workers(config: Arc<Config>, consumers: Vec<Consumer<MxJob>>) -> Result<()> {
+async fn spawn_workers(
+    config: Arc<Config>,
+    producer: Producer<MxJob>,
+    consumers: Vec<Consumer<MxJob>>,
+) -> Result<()> {
     let container = construct_container_db(&config).await?;
     let http_client = create_http_client(&config)?;
 
@@ -65,6 +70,7 @@ async fn spawn_workers(config: Arc<Config>, consumers: Vec<Consumer<MxJob>>) -> 
             job_state: JobState {
                 config: config.clone(),
                 container: container.clone(),
+                producer: producer.clone(),
                 http_client: http_client.clone(),
             },
         }));
@@ -74,28 +80,54 @@ async fn spawn_workers(config: Arc<Config>, consumers: Vec<Consumer<MxJob>>) -> 
 }
 
 #[instrument(skip(state), fields(worker = state.name))]
-async fn worker(state: WorkerState) -> Result<()> {
-    // TODO: just loop
-    while let Some((job, delivery)) = state.consumer.fetch().await? {
+async fn worker(state: WorkerState) {
+    loop {
+        let (job, delivery) = match state.consumer.fetch().await {
+            Ok(Some((j, d))) => (j, d),
+            Err(e) => {
+                error!("queue fetch error: {e}");
+                continue;
+            }
+            Ok(None) => {
+                info!("Queue closed");
+                return;
+            }
+        };
+
         let job_state = state.job_state.clone();
         let job_payload = job.job().clone();
         let job_tag = job.tag().to_string();
 
         match do_job(job_state, job_payload, job_tag).await {
-            Ok(()) => {
-                state.consumer.mark_success(delivery).await?;
-            }
+            Ok(()) => match state.consumer.mark_success(delivery).await {
+                Ok(()) => (),
+                Err(e) => {
+                    error!("queue ack error: {e}");
+                    continue;
+                }
+            },
             Err(e) => {
                 error!("job error: {e}");
-                state.consumer.mark_failure(delivery).await?;
-                if let Some((data, delay)) = job.next() {
-                    state.consumer.enqueue(data, Some(delay)).await?;
+                match state.consumer.mark_failure(delivery).await {
+                    Ok(()) => (),
+                    Err(e) => {
+                        error!("queue nack error: {e}");
+                        continue;
+                    }
+                }
+                let Some((data, delay)) = job.next() else {
+                    continue;
+                };
+                match state.consumer.enqueue(data, Some(delay)).await {
+                    Ok(()) => (),
+                    Err(e) => {
+                        error!("retry enqueue error: {e}");
+                        continue;
+                    }
                 }
             }
         }
     }
-
-    Ok(())
 }
 
 #[instrument(
@@ -108,9 +140,12 @@ async fn do_job(state: JobState, payload: Job, _tag: String) -> Result<()> {
             info!("hello monaxia!");
         }
         Job::ActivityPreprocess(json_text, validation) => {
-            ap::validate_request(state, json_text, validation).await?;
+            let next = ap::preprocess_activity(state.clone(), json_text, validation).await?;
+            state.producer.enqueue(next, None).await?;
+        }
+        Job::ActivityDistribution(raw_activity) => {
+            ap::activity_distribution(state, raw_activity).await?;
         }
     }
-
     Ok(())
 }

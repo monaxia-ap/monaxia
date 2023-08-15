@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use monaxia_data::ap::RequestValidation;
+use monaxia_data::ap::{activity::RawActivity, RequestValidation};
 use monaxia_queue::retry::{Backoff, Retry};
 use serde::{Deserialize, Serialize};
 
@@ -50,4 +50,7 @@ pub enum Job {
     /// Preprocesses activity json object.
     /// Validates signature header.
     ActivityPreprocess(String, RequestValidation),
+
+    /// Receives raw Activity object and analyzes it.
+    ActivityDistribution(RawActivity),
 }

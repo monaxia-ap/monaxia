@@ -1,4 +1,5 @@
 pub mod activity;
+pub mod jsonld;
 pub mod object;
 
 use crate::{

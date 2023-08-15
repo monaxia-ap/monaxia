@@ -1,9 +1,13 @@
 use super::JobState;
 use crate::worker::user::retrieve_public_key;
 
-use monaxia_data::{ap::RequestValidation, http::DigestAlgorithm};
+use monaxia_data::{
+    ap::{activity::RawActivity, RequestValidation},
+    http::DigestAlgorithm,
+};
 
 use anyhow::{bail, Result};
+use monaxia_job::job::{Job, MxJob};
 use rsa::{
     pkcs1v15::{Signature, VerifyingKey},
     pkcs8::DecodePublicKey,
@@ -14,11 +18,11 @@ use sha2::{Digest, Sha256, Sha512};
 use tracing::{debug, error, instrument};
 
 #[instrument(skip(state, json_text, validation), fields(key = validation.signature_header.key_id))]
-pub(super) async fn validate_request(
+pub(super) async fn preprocess_activity(
     state: JobState,
     json_text: String,
     validation: RequestValidation,
-) -> Result<()> {
+) -> Result<MxJob> {
     debug!("validating signature and digest");
 
     // body digest
@@ -72,5 +76,27 @@ pub(super) async fn validate_request(
         }
     }
 
-    Ok(())
+    match serde_json::from_str(&json_text) {
+        Ok(ra) => {
+            let job = MxJob::new_single(Job::ActivityDistribution(ra));
+            Ok(job)
+        }
+        Err(e) => {
+            error!("failed to deserialize: {e}");
+            error!("Raw JSON: {json_text}");
+            bail!("request validation error");
+        }
+    }
+}
+
+#[instrument(skip(state, raw_activity))]
+pub(super) async fn activity_distribution(
+    state: JobState,
+    raw_activity: RawActivity,
+) -> Result<Option<MxJob>> {
+    debug!("Activity type: {}", raw_activity.ty);
+    debug!("Activity ID: {:?}", raw_activity.id);
+    debug!("Activity Actor: {:?}", raw_activity.actor);
+
+    Ok(None)
 }

@@ -1,7 +1,6 @@
+use monaxia_data::ap::jsonld::JsonLd;
 use serde::Serialize;
 use url::Url;
-
-use crate::web::jsonld::JsonLd;
 
 /// Response type of ActivityPub Person object.
 #[derive(Debug, Clone, Serialize)]

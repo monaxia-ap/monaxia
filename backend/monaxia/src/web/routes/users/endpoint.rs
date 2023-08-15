@@ -2,13 +2,12 @@ use super::schema::{ResponsePerson, ResponsePersonPublicKey};
 use crate::web::{
     error::{map_err_queue, MxResult},
     extract::{ApJson, ApJsonText, ApValidation, MustAcceptActivityJson, PathLocalUser},
-    jsonld::JSONLD_OBJECT,
     state::AppState,
 };
 
 use axum::{extract::State, http::StatusCode};
 use monaxia_data::{
-    ap::RequestValidation,
+    ap::{jsonld::JSONLD_OBJECT, RequestValidation},
     user::{generate_local_user_url, LocalUserUrl},
 };
 use monaxia_job::job::{Job, MxJob};
