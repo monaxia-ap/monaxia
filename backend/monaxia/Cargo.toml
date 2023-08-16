@@ -6,29 +6,32 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
+axum = { workspace = true }
+axum-extra = { workspace = true }
+clap = { workspace = true }
 futures = { workspace = true }
+inquire = { workspace = true }
 lapin = { workspace = true }
+mime = { workspace = true }
 once_cell = { workspace = true }
+rand = { workspace = true }
+reqwest = { workspace = true }
 rsa = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_variant = { workspace = true }
+sha2 = { workspace = true }
 sqlx = { workspace = true }
 thiserror = { workspace = true }
 time = { workspace = true }
 tokio = { workspace = true }
 tokio-stream = { workspace = true }
+tower-http = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 url = { workspace = true }
 
-axum = "0.6.18"
-axum-extra = "0.7.4"
-clap = { version = "4.3.11", features = ["derive"] }
-inquire = "0.6.2"
-mime = "0.3.17"
-rand = "0.8.5"
-tower-http = { version = "0.4.3", features = ["trace"] }
-
+monaxia-ap = { workspace = true }
 monaxia-data = { workspace = true }
 monaxia-db = { workspace = true }
 monaxia-job = { workspace = true }

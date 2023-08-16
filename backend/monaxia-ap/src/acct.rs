@@ -1,5 +1,4 @@
-use crate::user::{validate_username_format, UsernameError};
-
+use monaxia_data::user::{validate_username_format, UsernameError};
 use thiserror::Error as ThisError;
 use url::Url;
 

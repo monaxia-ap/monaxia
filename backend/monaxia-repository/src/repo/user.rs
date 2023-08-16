@@ -2,7 +2,7 @@ use super::Repository;
 use crate::RepoResult;
 
 use async_trait::async_trait;
-use monaxia_data::user::{LocalUser, LocalUserRegistration, RemoteUserRegistration};
+use monaxia_data::user::{LocalUser, LocalUserRegistration, RemoteUserRegistration, User};
 
 #[async_trait]
 pub trait UserRepository: Repository {
@@ -18,7 +18,7 @@ pub trait UserRepository: Repository {
         &self,
         registration: LocalUserRegistration,
         domain: &str,
-    ) -> RepoResult<String>;
+    ) -> RepoResult<User>;
 
     /// Registers new remote user and returns the ID of the user.
     /// Domain must be registered before this.
@@ -26,9 +26,12 @@ pub trait UserRepository: Repository {
         &self,
         registration: RemoteUserRegistration,
         domain: &str,
-    ) -> RepoResult<String>;
+    ) -> RepoResult<User>;
 
-    /// Finds a local user by username.
+    /// Finds a user by user column.
+    async fn find_user(&self, user_find: UserFind<'_>) -> RepoResult<Option<User>>;
+
+    /// Finds a local user by user column.
     async fn find_local_user(&self, user_find: UserFind<'_>) -> RepoResult<Option<LocalUser>>;
 }
 
@@ -36,4 +39,5 @@ pub trait UserRepository: Repository {
 pub enum UserFind<'a> {
     Username(&'a str),
     UserId(&'a str),
+    KeyId(&'a str),
 }

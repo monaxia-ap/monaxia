@@ -4,12 +4,12 @@ use std::{
     env::{current_dir, var as env_var, VarError},
     path::{Path, PathBuf},
     process::Command,
+    sync::Arc,
 };
 
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use monaxia_data::config::Config;
-use monaxia_repository::Container;
 use once_cell::sync::Lazy;
 use time::{
     format_description::FormatItem, macros::format_description, OffsetDateTime, PrimitiveDateTime,
@@ -34,14 +34,12 @@ pub enum MxCommand {
 }
 
 pub async fn execute_migrate_subcommand(
-    config: Config,
+    config: Arc<Config>,
     subcommand: MigrateSubcommand,
 ) -> Result<()> {
-    let container = construct_container_db(&config).await?;
-
     match subcommand.command {
         None => {
-            execute_migration(container).await?;
+            execute_migration(&config).await?;
         }
         Some(MxCommand::New { name }) => {
             create_new_migration(&name).await?;
@@ -65,8 +63,10 @@ async fn create_new_migration(name: &str) -> Result<()> {
     Ok(())
 }
 
-async fn execute_migration(container: Container) -> Result<()> {
+async fn execute_migration(config: &Config) -> Result<()> {
     info!("executing migration...");
+
+    let container = construct_container_db(config).await?;
 
     container.migration.ensure_table().await?;
 
@@ -112,12 +112,12 @@ fn get_migrations_dir() -> Result<PathBuf> {
             let migrations_dir = Path::new(workspace_file.trim())
                 .parent()
                 .context("invalid workspace root")?
-                .join("migrations");
+                .join("backend/migrations");
             Ok(migrations_dir)
         }
         Err(VarError::NotPresent) => {
             let curdir = current_dir()?;
-            let migrations_dir = curdir.join("backend/migrations");
+            let migrations_dir = curdir.join("migrations");
             Ok(migrations_dir)
         }
         Err(_) => bail!("failed to retrieve Cargo info"),

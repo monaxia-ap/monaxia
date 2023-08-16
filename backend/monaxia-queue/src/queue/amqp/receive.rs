@@ -57,7 +57,7 @@ where
     }
 
     #[instrument(skip(self), fields(tag = format!("{} on {}", self.worker_name, self.queue_name)))]
-    async fn consume_one(&self) -> Result<Option<(T, Tag)>> {
+    async fn consume_one(&self) -> Result<Option<(T, BoxedTag)>> {
         let delivery = {
             let mut locked = self.consumer.lock().await;
             match locked.next().await {
@@ -66,10 +66,11 @@ where
             }
         };
 
-        let payload =
-            bincode::deserialize(&delivery.data).map_err(|e| Error::Serialization(e.into()))?;
-        let tag = Tag(delivery.acker);
-        Ok(Some((payload, tag)))
+        let tag = Box::new(Tag(delivery.acker));
+        match rmp_serde::from_slice(&delivery.data) {
+            Ok(payload) => Ok(Some((payload, tag))),
+            Err(e) => Err(Error::Deserialization(e.into(), tag)),
+        }
     }
 }
 
@@ -82,7 +83,7 @@ where
         let Some((payload, tag)) = self.consume_one().await? else {
             return Ok(None);
         };
-        Ok(Some((payload, Box::new(tag))))
+        Ok(Some((payload, tag)))
     }
 }
 

@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, path::Path};
+use std::{net::SocketAddr, path::Path, sync::Arc};
 
 use anyhow::{ensure, Result};
 use serde::Deserialize;
@@ -189,10 +189,10 @@ impl ConfigCached {
     }
 }
 
-pub async fn read_config(filename: &Path) -> Result<Config> {
+pub async fn read_config(filename: &Path) -> Result<Arc<Config>> {
     ensure!(filename.exists(), "config file not found");
     let config_text = read_to_string(filename).await?;
     let mut config: Config = toml::from_str(&config_text)?;
     config.warmup();
-    Ok(config)
+    Ok(Arc::new(config))
 }

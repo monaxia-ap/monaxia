@@ -53,7 +53,7 @@ where
     async fn publish(&self, data: T) -> Result<()> {
         // job is persistent
         let props = BasicProperties::default().with_delivery_mode(AMQP_PERSISTENT_DELIVERY_MODE);
-        let payload = bincode::serialize(&data).map_err(|e| Error::Serialization(e.into()))?;
+        let payload = rmp_serde::to_vec_named(&data).map_err(|e| Error::Serialization(e.into()))?;
 
         let confirm = self
             .channel
@@ -83,7 +83,7 @@ where
         let props = BasicProperties::default()
             .with_delivery_mode(AMQP_PERSISTENT_DELIVERY_MODE)
             .with_headers(headers);
-        let payload = bincode::serialize(&data).map_err(|e| Error::Serialization(e.into()))?;
+        let payload = rmp_serde::to_vec_named(&data).map_err(|e| Error::Serialization(e.into()))?;
 
         let confirm = self
             .channel

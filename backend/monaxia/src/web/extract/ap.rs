@@ -1,12 +1,16 @@
-use crate::{
-    constant::mime::{APPLICATION_ACTIVITY_JSON, APPLICATION_LD_JSON},
-    web::error::{ErrorResponse, ErrorType},
+use crate::web::error::{bail_err_header, map_err_extract, ErrorResponse, ErrorType};
+
+use std::collections::HashMap;
+
+use monaxia_data::http::{
+    header::{CANONICAL_REQUEST_TARGET, DIGEST, SIGNATURE},
+    mime::{APPLICATION_ACTIVITY_JSON, APPLICATION_LD_JSON},
 };
 
 use async_trait::async_trait;
 use axum::{
     body::HttpBody,
-    extract::{FromRequest, FromRequestParts},
+    extract::{FromRequest, FromRequestParts, OriginalUri},
     http::{
         header::{ACCEPT, CONTENT_TYPE},
         request::Parts,
@@ -16,7 +20,9 @@ use axum::{
     BoxError, Json,
 };
 use mime::{Mime, APPLICATION_JSON, TEXT_HTML};
-use serde::{de::DeserializeOwned, Serialize};
+use monaxia_data::http::{DigestHeader, SignatureHeader};
+use serde::Serialize;
+use tracing::debug;
 
 /// Accept header type.
 #[derive(Debug, Clone, Copy)]
@@ -70,14 +76,14 @@ where
     }
 }
 
+/// Accepts only activity JSON, but don't deserialize.
 #[derive(Debug, Clone)]
 #[must_use]
-pub struct ApJson<T>(pub T);
+pub struct ApJsonText(pub String);
 
 #[async_trait]
-impl<T, S, B> FromRequest<S, B> for ApJson<T>
+impl<S, B> FromRequest<S, B> for ApJsonText
 where
-    T: DeserializeOwned,
     B: HttpBody + Send + 'static,
     B::Data: Send,
     B::Error: Into<BoxError>,
@@ -87,9 +93,9 @@ where
 
     async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
         if ap_json_content_type(req.headers()) {
-            let inner = Json::<T>::from_request(req, state).await;
+            let inner = String::from_request(req, state).await;
             match inner {
-                Ok(Json(d)) => Ok(ApJson(d)),
+                Ok(s) => Ok(ApJsonText(s)),
                 Err(r) => Err(ErrorResponse {
                     status_code: r.status(),
                     error: ErrorType::InvalidRequest,
@@ -106,6 +112,11 @@ where
     }
 }
 
+/// Accepts only activity JSON and deserializes it.
+#[derive(Debug, Clone)]
+#[must_use]
+pub struct ApJson<T>(pub T);
+
 impl<T> IntoResponse for ApJson<T>
 where
     T: Serialize,
@@ -120,6 +131,82 @@ where
         );
 
         response
+    }
+}
+
+/// Parses signature and digest header.
+#[derive(Debug, Clone)]
+#[must_use]
+pub struct ApValidation {
+    pub digest_header: DigestHeader,
+    pub signature_header: SignatureHeader,
+    pub header_values: HashMap<String, String>,
+}
+
+#[async_trait]
+impl<S> FromRequestParts<S> for ApValidation
+where
+    S: Send + Sync,
+{
+    type Rejection = ErrorResponse;
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        // digest header
+        let digest_header: DigestHeader = {
+            let Some(digest) = parts.headers.get(DIGEST) else {
+                return bail_err_header(DIGEST)?;
+            };
+            let digest_header_str = digest.to_str().map_err(map_err_extract)?.to_string();
+            debug!("parsing digest {digest_header_str}");
+            digest_header_str.parse().map_err(map_err_extract)?
+        };
+
+        // signature header extraction
+        let signature_header: SignatureHeader = {
+            let Some(signature_header_str) = parts.headers.get(SIGNATURE) else {
+                return bail_err_header(SIGNATURE)?;
+            };
+            let signature_header_str = signature_header_str
+                .to_str()
+                .map_err(map_err_extract)?
+                .to_string();
+            signature_header_str.parse().map_err(map_err_extract)?
+        };
+
+        // header values
+        let mut header_values = HashMap::new();
+        for header_name in &signature_header.headers {
+            match header_name.as_str() {
+                CANONICAL_REQUEST_TARGET => {
+                    let OriginalUri(orig_uri) = parts
+                        .extensions
+                        .get::<OriginalUri>()
+                        .expect("original URI not found");
+                    let value = format!(
+                        "{} {}",
+                        parts.method.to_string().to_lowercase(),
+                        orig_uri
+                            .path_and_query()
+                            .map(|pq| pq.as_str())
+                            .unwrap_or("/")
+                    );
+                    header_values.insert(CANONICAL_REQUEST_TARGET.into(), value);
+                }
+                header => {
+                    let Some(value) = parts.headers.get(header) else {
+                        return bail_err_header(header)?;
+                    };
+                    let value = value.to_str().map_err(map_err_extract)?.to_string();
+                    header_values.insert(header.to_string(), value);
+                }
+            }
+        }
+
+        Ok(ApValidation {
+            digest_header,
+            signature_header,
+            header_values,
+        })
     }
 }
 

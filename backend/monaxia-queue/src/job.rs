@@ -32,6 +32,10 @@ impl<T> Consumer<T>
 where
     T: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
+    pub async fn get_sender(&self) -> Arc<dyn SendQueue<T>> {
+        self.shared_sender.clone()
+    }
+
     pub async fn enqueue(&self, data: T, delay: Option<Duration>) -> Result<()> {
         self.shared_sender.enqueue(data, delay).await?;
         Ok(())

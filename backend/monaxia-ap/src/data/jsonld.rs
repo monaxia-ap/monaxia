@@ -1,3 +1,5 @@
+use super::single_sequence;
+
 use std::fmt::{Formatter, Result as FmtResult};
 
 use once_cell::sync::Lazy;
@@ -24,7 +26,7 @@ pub static JSONLD_OBJECT: Lazy<JsonLd> = Lazy::new(|| JsonLd {
 /// Contains `@context` property. supposed to used with `#[serde(flatten)]`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonLd {
-    #[serde(rename = "@context")]
+    #[serde(rename = "@context", deserialize_with = "single_sequence")]
     pub context: Vec<JsonLdContext>,
 }
 

@@ -3,7 +3,7 @@ mod reject;
 mod user;
 
 pub use self::{
-    ap::{ApAccept, ApDualAccept, ApJson, MustAcceptActivityJson},
+    ap::{ApAccept, ApDualAccept, ApJson, ApJsonText, ApValidation, MustAcceptActivityJson},
     reject::{MonaxiaRejection, RjForm, RjJson, RjQuery},
     user::PathLocalUser,
 };
