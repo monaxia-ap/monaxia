@@ -15,11 +15,17 @@ axum = "0.6.18"
 axum-extra = "0.7.4"
 anyhow = "1.0.71"
 async-trait = "0.1.72"
+base64 = "0.21.2"
+clap = { version = "4.3.11", features = ["derive"] }
 futures = "0.3.28"
+hex = "0.4.3"
+inquire = "0.6.2"
 lapin = "2.3.1"
 mime = "0.3.17"
 once_cell = "1.18.0"
+rand = "0.8.5"
 regex = "1.9.1"
+reqwest = { version = "0.11.18", features = ["json"] }
 rmp-serde = "1.1.2"
 rsa = { version = "0.9.2", features = ["sha2"] }
 sea-query = { version = "0.30.0", features = [
@@ -36,7 +42,10 @@ sea-query-binder = { version = "0.5.0", features = [
     "with-json",
 ] }
 serde = { version = "1.0.171", features = ["derive"] }
+serde_bytes = "0.11.12"
 serde_json = "1.0.103"
+serde_variant = "0.1.2"
+sha2 = { version = "0.10.7", features = ["oid"] }
 sqlx = { version = "0.7.1", features = [
     "runtime-tokio",
     "postgres",
@@ -54,6 +63,8 @@ time = { version = "0.3.23", features = [
 thiserror = "1.0.44"
 tokio = { version = "1.29.1", features = ["full"] }
 tokio-stream = { version = "0.1.14", features = ["full"] }
+toml = "0.7.6"
+tower-http = { version = "0.4.3", features = ["trace"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 url = { version = "2.4.0", features = ["serde"] }
