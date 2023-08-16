@@ -1,9 +1,9 @@
 use super::JobState;
-use crate::misc::mime::APPLICATION_ACTIVITY_JSON;
 
 use anyhow::{bail, Result};
+use monaxia_ap::data::object::Person;
 use monaxia_data::{
-    ap::object::Person,
+    http::mime::APPLICATION_ACTIVITY_JSON,
     user::{RemoteUserRegistration, UserPublicKey},
 };
 use monaxia_repository::repo::user::UserFind;

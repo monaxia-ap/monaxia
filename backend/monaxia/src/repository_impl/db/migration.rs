@@ -29,7 +29,11 @@ impl MigrationRepository for MigrationRepositoryImpl {
     async fn fetch_last_migration(&self) -> RepoResult<Option<Migration>> {
         let mut conn = self.0.acquire().await?;
         let migration = fetch_last_migration(&mut conn).await?;
-        Ok(migration)
+        Ok(migration.map(|m| Migration {
+            id: m.id,
+            last_migration: m.last_migration,
+            executed_at: m.executed_at,
+        }))
     }
 
     async fn run_migrations(
@@ -57,6 +61,10 @@ impl MigrationRepository for MigrationRepositoryImpl {
     ) -> RepoResult<Migration> {
         let mut conn = self.0.acquire().await?;
         let new_migration = register_migration(&mut conn, last_migration, now).await?;
-        Ok(new_migration)
+        Ok(Migration {
+            id: new_migration.id,
+            last_migration: new_migration.last_migration,
+            executed_at: new_migration.executed_at,
+        })
     }
 }

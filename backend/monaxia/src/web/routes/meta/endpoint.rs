@@ -19,7 +19,8 @@ use axum::{
     Json,
 };
 use axum_extra::extract::WithRejection;
-use monaxia_data::{ap::Acct, config::UserRegistration};
+use monaxia_ap::acct::Acct;
+use monaxia_data::config::UserRegistration;
 use monaxia_repository::repo::user::UserFind;
 
 pub async fn host_meta(State(state): State<AppState>) -> MxResult<Response<String>> {

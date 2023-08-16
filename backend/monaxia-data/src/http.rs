@@ -4,6 +4,17 @@ use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine as _};
 use serde::{Deserialize, Serialize};
 use thiserror::Error as ThisError;
 
+pub mod mime {
+    pub const APPLICATION_ACTIVITY_JSON: &str = "application/activity+json";
+    pub const APPLICATION_LD_JSON: &str = "application/ld+json";
+}
+
+pub mod header {
+    pub const DIGEST: &str = "digest";
+    pub const SIGNATURE: &str = "signature";
+    pub const CANONICAL_REQUEST_TARGET: &str = "(request-target)";
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SignatureHeader {
     pub key_id: String,
@@ -117,4 +128,12 @@ impl FromStr for DigestHeader {
 
         Err(DigestHeaderError)
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[must_use]
+pub struct RequestValidation {
+    pub digest_header: DigestHeader,
+    pub signature_header: SignatureHeader,
+    pub header_values: HashMap<String, String>,
 }

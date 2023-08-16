@@ -1,15 +1,4 @@
-pub mod activity;
-pub mod jsonld;
-pub mod object;
-
-use crate::{
-    http::{DigestHeader, SignatureHeader},
-    user::{validate_username_format, UsernameError},
-};
-
-use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
+use monaxia_data::user::{validate_username_format, UsernameError};
 use thiserror::Error as ThisError;
 use url::Url;
 
@@ -71,12 +60,4 @@ impl Acct {
     pub fn to_subject(&self) -> String {
         format!("acct:{}@{}", self.username, self.origin)
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[must_use]
-pub struct RequestValidation {
-    pub digest_header: DigestHeader,
-    pub signature_header: SignatureHeader,
-    pub header_values: HashMap<String, String>,
 }

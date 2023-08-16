@@ -1,10 +1,8 @@
 use super::JobState;
 use crate::worker::user::retrieve_public_key;
 
-use monaxia_data::{
-    ap::{activity::RawActivity, RequestValidation},
-    http::DigestAlgorithm,
-};
+use monaxia_ap::data::activity::{ty::FOLLOW, RawActivity};
+use monaxia_data::http::{DigestAlgorithm, RequestValidation};
 
 use anyhow::{bail, Result};
 use monaxia_job::job::{Job, MxJob};
@@ -15,7 +13,7 @@ use rsa::{
     RsaPublicKey,
 };
 use sha2::{Digest, Sha256, Sha512};
-use tracing::{debug, error, instrument};
+use tracing::{debug, error, instrument, warn};
 
 #[instrument(skip(state, json_text, validation), fields(key = validation.signature_header.key_id))]
 pub(super) async fn preprocess_activity(
@@ -95,8 +93,13 @@ pub(super) async fn activity_distribution(
     raw_activity: RawActivity,
 ) -> Result<Option<MxJob>> {
     debug!("Activity type: {}", raw_activity.ty);
-    debug!("Activity ID: {:?}", raw_activity.id);
-    debug!("Activity Actor: {:?}", raw_activity.actor);
+    debug!("Activity rest: {:?}", raw_activity.rest);
 
-    Ok(None)
+    match raw_activity.ty.as_str() {
+        FOLLOW => Ok(None),
+        t => {
+            warn!("unknown activity: {t}");
+            bail!("activity error");
+        }
+    }
 }

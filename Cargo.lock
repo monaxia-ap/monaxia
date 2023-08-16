@@ -1426,6 +1426,7 @@ dependencies = [
  "inquire",
  "lapin",
  "mime",
+ "monaxia-ap",
  "monaxia-data",
  "monaxia-db",
  "monaxia-job",
@@ -1451,13 +1452,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "monaxia-ap"
+version = "0.1.0"
+dependencies = [
+ "monaxia-data",
+ "once_cell",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+ "url",
+]
+
+[[package]]
 name = "monaxia-data"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64",
  "hex",
- "monaxia-db",
  "once_cell",
  "regex",
  "rsa",
@@ -1465,6 +1478,7 @@ dependencies = [
  "serde_bytes",
  "serde_json",
  "thiserror",
+ "time",
  "tokio",
  "toml",
  "tracing",
@@ -1488,6 +1502,7 @@ name = "monaxia-job"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "monaxia-ap",
  "monaxia-data",
  "monaxia-queue",
  "serde",

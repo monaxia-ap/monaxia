@@ -1,4 +1,4 @@
-use monaxia_data::ap::jsonld::JsonLd;
+use monaxia_ap::data::jsonld::JsonLd;
 use serde::Serialize;
 use url::Url;
 

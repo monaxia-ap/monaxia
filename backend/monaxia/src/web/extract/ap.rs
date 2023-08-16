@@ -1,11 +1,10 @@
+use crate::web::error::{bail_err_header, map_err_extract, ErrorResponse, ErrorType};
+
 use std::collections::HashMap;
 
-use crate::{
-    misc::{
-        header::{CANONICAL_REQUEST_TARGET, DIGEST, SIGNATURE},
-        mime::{APPLICATION_ACTIVITY_JSON, APPLICATION_LD_JSON},
-    },
-    web::error::{bail_err_header, map_err_extract, ErrorResponse, ErrorType},
+use monaxia_data::http::{
+    header::{CANONICAL_REQUEST_TARGET, DIGEST, SIGNATURE},
+    mime::{APPLICATION_ACTIVITY_JSON, APPLICATION_LD_JSON},
 };
 
 use async_trait::async_trait;

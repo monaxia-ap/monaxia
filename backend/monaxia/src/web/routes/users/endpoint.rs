@@ -6,8 +6,9 @@ use crate::web::{
 };
 
 use axum::{extract::State, http::StatusCode};
+use monaxia_ap::data::jsonld::JSONLD_OBJECT;
 use monaxia_data::{
-    ap::{jsonld::JSONLD_OBJECT, RequestValidation},
+    http::RequestValidation,
     user::{generate_local_user_url, LocalUserUrl},
 };
 use monaxia_job::job::{Job, MxJob};

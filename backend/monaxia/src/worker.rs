@@ -10,6 +10,7 @@ use lapin::{Connection as LapinConnection, ConnectionProperties};
 use monaxia_data::config::Config;
 use monaxia_job::job::{Job, MxJob};
 use monaxia_queue::{
+    error::Error,
     job::{Consumer, Producer},
     queue::amqp::{create_amqp_consumer, create_amqp_producer},
 };
@@ -80,17 +81,25 @@ async fn spawn_workers(
 }
 
 #[instrument(skip(state), fields(worker = state.name))]
-async fn worker(state: WorkerState) {
+async fn worker(state: WorkerState) -> Result<()> {
+    // queue errors cannot be recovered in this function,
+    // so bailout about them
     loop {
         let (job, delivery) = match state.consumer.fetch().await {
             Ok(Some((j, d))) => (j, d),
+            Err(Error::Deserialization(e, d)) => {
+                // must be marked as failure, or queue will be closed forcely
+                error!("queue deserialization error: {e}");
+                state.consumer.mark_failure(d).await?;
+                continue;
+            }
             Err(e) => {
                 error!("queue fetch error: {e}");
                 continue;
             }
             Ok(None) => {
                 info!("Queue closed");
-                return;
+                return Ok(());
             }
         };
 
@@ -99,32 +108,16 @@ async fn worker(state: WorkerState) {
         let job_tag = job.tag().to_string();
 
         match do_job(job_state, job_payload, job_tag).await {
-            Ok(()) => match state.consumer.mark_success(delivery).await {
-                Ok(()) => (),
-                Err(e) => {
-                    error!("queue ack error: {e}");
-                    continue;
-                }
-            },
+            Ok(()) => {
+                state.consumer.mark_success(delivery).await?;
+            }
             Err(e) => {
                 error!("job error: {e}");
-                match state.consumer.mark_failure(delivery).await {
-                    Ok(()) => (),
-                    Err(e) => {
-                        error!("queue nack error: {e}");
-                        continue;
-                    }
-                }
+                state.consumer.mark_failure(delivery).await?;
                 let Some((data, delay)) = job.next() else {
                     continue;
                 };
-                match state.consumer.enqueue(data, Some(delay)).await {
-                    Ok(()) => (),
-                    Err(e) => {
-                        error!("retry enqueue error: {e}");
-                        continue;
-                    }
-                }
+                state.consumer.enqueue(data, Some(delay)).await?;
             }
         }
     }

@@ -1,6 +1,7 @@
 use std::time::Duration;
 
-use monaxia_data::ap::{activity::RawActivity, RequestValidation};
+use monaxia_ap::data::activity::RawActivity;
+use monaxia_data::http::RequestValidation;
 use monaxia_queue::retry::{Backoff, Retry};
 use serde::{Deserialize, Serialize};
 
